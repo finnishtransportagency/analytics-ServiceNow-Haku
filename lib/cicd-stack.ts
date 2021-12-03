@@ -56,7 +56,7 @@ export class CICDStack extends Stack {
 Old method of getting access to github, should be replaced with ServiceNow-GitConnectionParameter... read todo from code for reason
 */
 
-    const secretToken = new secretsmanager.Secret(this, appname + '-AppSecrets',
+    const secretToken = new secretsmanager.Secret(this, appname + '-pipelineSecrets',
     {
       generateSecretString: {
         secretStringTemplate: '{"gittoken": "token"}', 
@@ -81,7 +81,8 @@ Old method of getting access to github, should be replaced with ServiceNow-GitCo
    
 
         const pipeline = new CodePipeline(this, appname+'-Pipeline', {
-           pipelineName: appname+'-Pipeline',
+          crossAccountKeys:true,
+          pipelineName: appname+'-Pipeline',
           synth:  new ShellStep('Synth', {
           //  input: CodePipelineSource.codeCommit(repo, branch),
           input: CodePipelineSource.gitHub(this.node.tryGetContext('ownerandapp'), 'master', {
