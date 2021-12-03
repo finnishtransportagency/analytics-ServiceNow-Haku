@@ -86,7 +86,7 @@ Old method of getting access to github, should be replaced with ServiceNow-GitCo
           synth:  new ShellStep('Synth', {
           //  input: CodePipelineSource.codeCommit(repo, branch),
           input: CodePipelineSource.gitHub(this.node.tryGetContext('ownerandapp'), 'master', {
-            authentication: SecretValue.secretsManager(secretToken.secretArn,{jsonField:"gittoken"})
+            authentication: SecretValue.secretsManager(secretToken.secretArn,{jsonField:"gittoken2"})
             }),
             
           commands: ['npm ci', 'npm run build', 'npx cdk synth'],            
