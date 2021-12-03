@@ -81,8 +81,7 @@ Old method of getting access to github, should be replaced with ServiceNow-GitCo
    
 
         const pipeline = new CodePipeline(this, appname+'-Pipeline', {
-          crossAccountKeys:true,
-          pipelineName: appname+'-Pipeline',
+           pipelineName: appname+'-Pipeline',
           synth:  new ShellStep('Synth', {
           //  input: CodePipelineSource.codeCommit(repo, branch),
           input: CodePipelineSource.gitHub(this.node.tryGetContext('ownerandapp'), 'master', {
