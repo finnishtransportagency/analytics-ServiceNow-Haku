@@ -85,7 +85,7 @@ Old method of getting access to github, should be replaced with ServiceNow-GitCo
           pipelineName: appname+'-Pipeline',
           synth:  new ShellStep('Synth', {
           //  input: CodePipelineSource.codeCommit(repo, branch),
-          input: CodePipelineSource.gitHub(this.node.tryGetContext('ownerandapp'), 'master', {
+          input: CodePipelineSource.gitHub("oappicgi/testing", 'master', {
             authentication: SecretValue.secretsManager(secretToken.secretArn,{jsonField:"gittoken2"})
             }),
             
