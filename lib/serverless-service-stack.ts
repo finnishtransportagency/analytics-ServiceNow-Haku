@@ -59,7 +59,7 @@ function datapipeServiceNowTable(construct: cdk.Construct, rajapintaName: string
   const databucket = new s3.Bucket(construct, 'DataBucket' + resourcenaming, {
     removalPolicy: cdk.RemovalPolicy.DESTROY,
   });
-/*
+
   const apiLambda = new lambda.Function(construct, 'APIFetch' + resourcenaming, {
     code: code,
     handler: handler,
@@ -79,7 +79,7 @@ function datapipeServiceNowTable(construct: cdk.Construct, rajapintaName: string
   });
   secretmanager.grantRead(apiLambda)
   landingBucket.grantPut(apiLambda)
-*/
+
 
   /* Add these if two phased prosessing
   const converterLambda=new lambda.Function(construct, 'ADEConverter'+resourcenaming, {
