@@ -81,17 +81,19 @@ Old method of getting access to github, should be replaced with ServiceNow-GitCo
    
 
         const pipeline = new CodePipeline(this, appname+'-Pipeline', {
+          dockerEnabledForSelfMutation:true,
           crossAccountKeys:true,
           pipelineName: appname+'-Pipeline',
           synth:  new ShellStep('Synth', {
-          //  input: CodePipelineSource.codeCommit(repo, branch),
           input: CodePipelineSource.gitHub("oappicgi/testing", 'master', {
             authentication: SecretValue.secretsManager(secretToken.secretArn,{jsonField:"gittoken2"})
-            }),
-            
+            }),          
           commands: ['npm ci', 'npm run build', 'npx cdk synth'],            
-          })
+          }), 
         });
+
+
+
 
     /*
 repo - to read the repository
