@@ -32,19 +32,21 @@ export class ServerlessServiceStack extends cdk.Stack {
     //remember to add url,username,password hints to secretmanager so lambda can fetch them
     datapipeServiceNowTable(this, "now/table/task", this.stackName, secretmanagerForSecrets, this.region,
       lambdaRole, "Servicenow-Table-Task-URL", "Servicenow-Table-Task-Username", "Servicenow-Table-Task-password", 
-      "com.cgi.lambda.apifetch.LambdaFunctionHandler", lambda.Code.fromAsset("./lambda/servicenow/ServiceNowDataToS3/",
-        {
-          bundling:
+      "com.cgi.lambda.apifetch.LambdaFunctionHandler", 
+      lambda.Code.fromAsset
+        ("./lambda/servicenow/ServiceNowDataToS3/",
           {
-            command:
-              ["/bin/sh", "-c", 
-              "mvn clean install && cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/"], 
-            image: lambda.Runtime.JAVA_8.bundlingImage, 
-            user: "root", 
-            outputType: cdk.BundlingOutput.ARCHIVED
+            bundling:
+            {
+              command:
+                ["/bin/sh", "-c", 
+                "mvn clean install && cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/"], 
+              image: lambda.Runtime.JAVA_8.bundlingImage, 
+              user: "root", 
+              outputType: cdk.BundlingOutput.ARCHIVED
+            }
           }
-        }
-      )
+        )
     )
     
   }
