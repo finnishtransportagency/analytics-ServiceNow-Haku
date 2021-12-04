@@ -37,9 +37,11 @@ export class ServerlessServiceStack extends cdk.Stack {
           bundling:
           {
             command:
-              ["/bin/sh", "-c", "mvn clean install " +
-                "&& cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/"]
-            , image: lambda.Runtime.JAVA_8.bundlingImage, user: "root", outputType: cdk.BundlingOutput.ARCHIVED
+              ["/bin/sh", "-c", "mvn clean install" +
+                "&& cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/"], 
+            image: lambda.Runtime.JAVA_8.bundlingImage, 
+            user: "root", 
+            outputType: cdk.BundlingOutput.ARCHIVED
           }
         }
       )
