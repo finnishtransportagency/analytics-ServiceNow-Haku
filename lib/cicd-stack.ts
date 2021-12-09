@@ -1,18 +1,9 @@
 import * as cdk from '@aws-cdk/core';
-import * as ec2 from '@aws-cdk/aws-ec2';
-
-import { Construct, Stage, Stack, StageProps, SecretValue } from '@aws-cdk/core';
+import { Construct, Stage, Stack, StageProps} from '@aws-cdk/core';
 import { CodePipeline, CodePipelineSource, ShellStep,ManualApprovalStep } from "@aws-cdk/pipelines";
-import * as ca from '@aws-cdk/aws-codepipeline-actions'
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
-import s3deploy = require('@aws-cdk/aws-s3-deployment');
 import * as ssm from '@aws-cdk/aws-ssm';
-import * as codecommit from '@aws-cdk/aws-codecommit';
-import { GitHubSourceAction, ManualApprovalAction } from '@aws-cdk/aws-codepipeline-actions';
-import s3 = require('@aws-cdk/aws-s3');
-import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
 import { ServerlessServiceStack } from './serverless-service-stack';
-import { countReset, timeStamp } from 'console';
 
 const sourceOutput = new codepipeline.Artifact();
 
@@ -53,20 +44,7 @@ export class CICDStack extends Stack {
       tier: ssm.ParameterTier.STANDARD,
     });
 
-/*
-Old method of getting access to github, should be replaced with ServiceNow-GitConnectionParameter... read todo from code for reason
-*/
-
-    const secretToken = new secretsmanager.Secret(this, appname + '-pipelineSecrets',
-    {
-      generateSecretString: {
-        secretStringTemplate: '{"gittoken": "token"}', 
-        generateStringKey: 'password',
-      },
-    },
-  );
-
-  if (this.node.tryGetContext('phase') != "init") {
+ if (this.node.tryGetContext('phase') != "init") {
 
     var branch = "master"
 
@@ -80,14 +58,7 @@ Old method of getting access to github, should be replaced with ServiceNow-GitCo
           commands: ['npm ci', 'npm run build', 'npx cdk synth'],            
           }), 
         });
-
-    /*
-repo - to read the repository
-admin:repo_hook - if you plan to use webhooks (true by default)
-*/
-    
-
-
+  
    const deployStage = pipeline.addStage( new ApplicationStageDev(this, appname+"dev-deploy", {
       env: { account: this.account, region: this.region }, 
       appname:appname
