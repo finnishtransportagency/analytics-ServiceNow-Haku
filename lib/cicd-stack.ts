@@ -30,9 +30,6 @@ export class CICDStack extends Stack {
     const appname = this.node.tryGetContext('appname')  
     const sourceArtifact = new codepipeline.Artifact();
     const cloudAssemblyArtifact = new codepipeline.Artifact();
-
- if (this.node.tryGetContext('phase') != "init") {
-
     var branch = "master"
 
         const pipeline = new CodePipeline(this, appname+'-Pipeline', {
@@ -56,7 +53,6 @@ export class CICDStack extends Stack {
       appname:appname    
     }));
     proddeployStage.addPre(new ManualApprovalStep('Pre-production check'))    
-  }  
+   
   }
   }
-
