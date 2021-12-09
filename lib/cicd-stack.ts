@@ -27,6 +27,7 @@ class ApplicationStageDev extends Stage {
   }
 }
 
+
 class ApplicationStageProd extends Stage {
   constructor(scope: Construct, id: string, props: stageprops) {
     super(scope, id, props);
@@ -69,31 +70,16 @@ Old method of getting access to github, should be replaced with ServiceNow-GitCo
 
     var branch = "master"
 
-    //TODO input in pipeline should be replaced with this. Current method is based on personal token which means that when person looses access to Väylä Git, Pipeline stops working
-    // New method requires connection be crated with organization admin priviliges
-    /* 
-          input: CodePipelineSource.connection(this.node.tryGetContext('ownerandapp'), 'master', {
-            connectionArn: ssm.StringParameter.fromStringParameterAttributes(this, appname+'-RetrivedGitConnectionParameter', {
-              parameterName: '/'+appname+'/gitARN',
-            }).stringValue, // Created using the AWS console in init phase * });',
-
-    */
-   
-
         const pipeline = new CodePipeline(this, appname+'-Pipeline', {
           dockerEnabledForSelfMutation:true,
           crossAccountKeys:true,
           pipelineName: appname+'-Pipeline',
           synth:  new ShellStep('Synth', {
-          input: CodePipelineSource.gitHub("oappicgi/testing", 'master', {
-            authentication: SecretValue.secretsManager(secretToken.secretArn,{jsonField:"gittoken2"})
-            }),          
+          input: CodePipelineSource.connection(this.node.tryGetContext('ownerandapp'), branch, {
+            connectionArn:  `arn:aws:codestar-connections:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:connection/${this.node.tryGetContext('connectionID')}`}),          
           commands: ['npm ci', 'npm run build', 'npx cdk synth'],            
           }), 
         });
-
-
-
 
     /*
 repo - to read the repository
