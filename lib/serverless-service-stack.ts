@@ -35,8 +35,15 @@ export class ServerlessServiceStack extends cdk.Stack {
     });
     
     var acl = ""
-
-
+    var env =this.stackName.split("-").slice(-1)[0]
+    if (env=="dev") {
+      acl=this.node.tryGetContext('ADEDevACL')
+    } else if (env=="qa") {
+      acl=this.node.tryGetContext('ADEQaACL')
+    } else if (env=="prod") {
+      acl=this.node.tryGetContext('ADEProdACL')
+    }
+    
     /*
     Replicate this for more lambda+bucket+crontrigger tasks sets and set secrets to secrets manager
     */
@@ -71,7 +78,6 @@ function datapipeServiceNowTable(construct: cdk.Construct, APIName: string, appn
   const databucket = new s3.Bucket(construct, 'DataBucket' + resourcenaming, {
     removalPolicy: cdk.RemovalPolicy.DESTROY,
   });
-  console.log(resourcenaming)
   const apiLambda = new lambda.Function(construct, 'APIFetch' + resourcenaming, {
     code: lambda.Code.fromAsset
       ("./lambda/servicenow/ServiceNowDataToS3/",
@@ -103,9 +109,9 @@ function datapipeServiceNowTable(construct: cdk.Construct, APIName: string, appn
       "api_limit": "1000",
       "s3_databucket_name": databucket.bucketName,
       "s3_manifestbucket_name": s3_manifestbucket_name,
-      "arn":aclValue, //ei salaaisia
-      "manifest_prefix":"ei salaisia",
-      "fullscan":""
+      "arn":aclValue, 
+      "manifest_prefix":manifest_prefix,
+      "fullscan":"" 
     },
     role: lambdaRole
   });
@@ -114,7 +120,7 @@ function datapipeServiceNowTable(construct: cdk.Construct, APIName: string, appn
 
   const rule = new Rule(construct, "dailyRun" + resourcenaming, {
     schedule: Schedule.expression("cron(15 3 * * ? *)"),
-    //  targets: [new LambdaFunction(apiLambda)],
+      targets: [new LambdaFunction(apiLambda)], 
   });
   cdk.Tags.of(databucket).add("APIFetch", APIName)
   //cdk.Tags.of(apiLambda).add("APIFetch",rajapintaName)
