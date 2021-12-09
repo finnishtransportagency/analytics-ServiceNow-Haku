@@ -71,9 +71,9 @@ function datapipeServiceNowTable(construct: cdk.Construct, APIName: string, appn
   const databucket = new s3.Bucket(construct, 'DataBucket' + resourcenaming, {
     removalPolicy: cdk.RemovalPolicy.DESTROY,
   });
-
+  console.log(resourcenaming)
   const apiLambda = new lambda.Function(construct, 'APIFetch' + resourcenaming, {
-    code:       lambda.Code.fromAsset
+    code: lambda.Code.fromAsset
       ("./lambda/servicenow/ServiceNowDataToS3/",
         {
         bundling:
@@ -120,7 +120,7 @@ function datapipeServiceNowTable(construct: cdk.Construct, APIName: string, appn
   //cdk.Tags.of(apiLambda).add("APIFetch",rajapintaName)
   cdk.Tags.of(rule).add("APIFetch", APIName)
 }
-//stepfunction (optional, nice to have no time atm)
+//stepfunction (optional, nice to have to loop through dates)
 
 
 

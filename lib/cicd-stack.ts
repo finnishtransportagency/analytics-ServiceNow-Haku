@@ -5,8 +5,6 @@ import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as ssm from '@aws-cdk/aws-ssm';
 import { ServerlessServiceStack } from './serverless-service-stack';
 
-const sourceOutput = new codepipeline.Artifact();
-
 interface stageprops extends StageProps {
   appname:string
 }
@@ -17,8 +15,6 @@ class ApplicationStageDev extends Stage {
     });
   }
 }
-
-
 class ApplicationStageProd extends Stage {
   constructor(scope: Construct, id: string, props: stageprops) {
     super(scope, id, props);
@@ -26,9 +22,7 @@ class ApplicationStageProd extends Stage {
     });
   }
 }
-
 interface ServiceStackProps extends cdk.StackProps {
-
 }
 export class CICDStack extends Stack {
   constructor(scope: Construct, id: string, props: ServiceStackProps) {
@@ -36,13 +30,6 @@ export class CICDStack extends Stack {
     const appname = this.node.tryGetContext('appname')  
     const sourceArtifact = new codepipeline.Artifact();
     const cloudAssemblyArtifact = new codepipeline.Artifact();
-    
-    new ssm.StringParameter(this, 'ServiceNow-GitConnectionParameter', {
-      description: 'ARN of the github connection that connects pipelineToRepository after manually setting it up',
-      parameterName: '/servicenow/gitconnectionARN',
-      stringValue: 'InsertMeAfterInitPhase',
-      tier: ssm.ParameterTier.STANDARD,
-    });
 
  if (this.node.tryGetContext('phase') != "init") {
 
