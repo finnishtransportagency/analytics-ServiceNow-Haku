@@ -123,7 +123,7 @@ function datapipeServiceNowTable(construct: cdk.Construct, APIName: string, appn
       targets: [new LambdaFunction(apiLambda)], 
   });
   cdk.Tags.of(databucket).add("APIFetch", APIName)
-  //cdk.Tags.of(apiLambda).add("APIFetch",rajapintaName)
+  cdk.Tags.of(apiLambda).add("APIFetch",APIName)
   cdk.Tags.of(rule).add("APIFetch", APIName)
 }
 //stepfunction (optional, nice to have to loop through dates)
