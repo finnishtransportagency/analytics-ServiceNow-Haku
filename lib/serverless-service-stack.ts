@@ -33,17 +33,8 @@ export class ServerlessServiceStack extends cdk.Stack {
     const landingBucket = new s3.Bucket(this, 'manifestBucket' + this.stackName, {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    
-    var acl = ""
     var env =this.stackName.split("-").slice(-1)[0]
-    if (env=="dev") {
-      acl=this.node.tryGetContext('ADEDevACL')
-    } else if (env=="qa") {
-      acl=this.node.tryGetContext('ADEQaACL')
-    } else if (env=="prod") {
-      acl=this.node.tryGetContext('ADEProdACL')
-    }
-    
+    var acl = this.node.tryGetContext('ADE'+env+'ACL')
     /*
     Replicate this for more lambda+bucket+crontrigger tasks sets and set secrets to secrets manager
     */
@@ -63,7 +54,8 @@ export class ServerlessServiceStack extends cdk.Stack {
       "", //output_filename 
       "", //s3_manifestbucket_name from secretmanager
       acl, //ACL value for xaccount bucket write
-      "", //manifest_prefix
+      "", //manifest_prefix,
+      "true", //coordinatetransformtoWgs84      
     )
   }
 }
@@ -71,7 +63,7 @@ export class ServerlessServiceStack extends cdk.Stack {
 function datapipeServiceNowTable(construct: cdk.Construct, APIName: string, appnameAndEnv: string, 
   secretmanager: secretsmanager.Secret, region: string, lambdaRole: iam.IRole, urlsecretHint: string,
   handler: string, buildcommand: string, query_string_default:string,query_string_date:string, 
-  output_prefix:string,output_filename:string,s3_manifestbucket_name:string,aclValue:string,manifest_prefix:string) {
+  output_prefix:string,output_filename:string,s3_manifestbucket_name:string,aclValue:string,manifest_prefix:string,ctransform:string) {
 
 
   const resourcenaming = "-" + APIName + "-" + appnameAndEnv
@@ -98,8 +90,6 @@ function datapipeServiceNowTable(construct: cdk.Construct, APIName: string, appn
     environment: {
       "secrets": secretmanager.secretArn,
       "region": region,
-      "alert_string": "## VAYLA AWS-HALYTYS: SERVICENOW:",  //TODO tarkista voiko parametrisoida
-      "charset": "UTF-8",
       "service_url": urlsecretHint,
       "query_string_default": query_string_default,
       "query_string_date": query_string_date,
@@ -111,6 +101,7 @@ function datapipeServiceNowTable(construct: cdk.Construct, APIName: string, appn
       "s3_manifestbucket_name": s3_manifestbucket_name,
       "arn":aclValue, 
       "manifest_prefix":manifest_prefix,
+      "coordinate_transform": ctransform,
       "fullscan":"" 
     },
     role: lambdaRole
