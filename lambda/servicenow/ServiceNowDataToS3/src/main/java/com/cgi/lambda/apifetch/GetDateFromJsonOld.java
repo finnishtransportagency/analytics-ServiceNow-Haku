@@ -2,12 +2,12 @@ package com.cgi.lambda.apifetch;
 
 import org.json.JSONObject;
 
-public class GetDateFromJson {
+public class GetDateFromJsonOld {
 
 	
 	private String json;
 	
-	public GetDateFromJson(String Json) {
+	public GetDateFromJsonOld(String Json) {
 		this.json=Json;
 		
 	}

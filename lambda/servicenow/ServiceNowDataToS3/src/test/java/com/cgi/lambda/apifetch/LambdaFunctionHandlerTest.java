@@ -7,7 +7,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.cgi.lambda.apifetch.LambdaFunctionHandler;
+import com.cgi.lambda.apifetch.LambdaFunctionHandlerOld;
 
 /**
  * A simple test harness for locally invoking your Lambda function handler.
@@ -46,7 +46,7 @@ public class LambdaFunctionHandlerTest {
     
 	@Test
 	public void testDateHandler() {
-		LambdaFunctionHandler handler = new LambdaFunctionHandler();
+		LambdaFunctionHandlerOld handler = new LambdaFunctionHandlerOld();
 		Object object = new String("");
 		
 		String date=handler.getDate(object);

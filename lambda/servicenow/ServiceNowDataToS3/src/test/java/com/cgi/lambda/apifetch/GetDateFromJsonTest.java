@@ -26,7 +26,7 @@ public class GetDateFromJsonTest {
         		"  \"date\": \"30-01-2019\"\r\n" + 
         		"}";
         
-        GetDateFromJson njs= new GetDateFromJson(datejson);
+        GetDateFromJsonOld njs= new GetDateFromJsonOld(datejson);
         String newdate=njs.getfromJson();
     	System.out.println(newdate);
     	/* LambdaFunctionHandler handler = new LambdaFunctionHandler();

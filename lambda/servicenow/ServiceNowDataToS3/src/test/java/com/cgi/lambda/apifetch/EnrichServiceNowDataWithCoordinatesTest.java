@@ -15,7 +15,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.cgi.lambda.apifetch.LambdaFunctionHandler;
+import com.cgi.lambda.apifetch.LambdaFunctionHandlerOld;
 
 public class EnrichServiceNowDataWithCoordinatesTest {
 
@@ -37,7 +37,7 @@ public class EnrichServiceNowDataWithCoordinatesTest {
 		}
     	System.out.println(new SimpleDateFormat("dd.MM.yyyy").format(new Date()) +"/part"+0+"/" + "u_case.json");
     	text=text.trim();
-    	EnrichServiceNowDataWithCoordinates enrich = new EnrichServiceNowDataWithCoordinates(ctx,text,"EPSG:3067",100);
+    	EnrichServiceNowDataWithCoordinatesOld enrich = new EnrichServiceNowDataWithCoordinatesOld(ctx,text,"EPSG:3067",100);
     	String enrichedData=enrich.enrichData();        
         Assert.assertTrue(enrichedData.contains("WGS84-x"));// checks that conversion is successful
         Assert.assertTrue(enrichedData.contains("WGS84-y"));// checks that conversion is successful
