@@ -45,25 +45,37 @@ export class ServerlessServiceStack extends cdk.Stack {
       secretmanagerForSecrets, // secretmanager for storing secrets
       this.region,            // region that is beign used      
       lambdaRole,             // role that allows cross region bucket put
-      "Servicenow-Table-Task-URL",  //  url parameter name from secretmanager
       "com.cgi.lambda.apifetch.LambdaFunctionHandler", //handler used in code 
       "mvn clean install && cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/", //buildcommand
       "",//query_string_default query string used to get data from API
       "",//query_string_date date modifier if we want exact date
-      "", //output_prefix
+      "", //output_path
       "", //output_filename 
-      "", //s3_manifestbucket_name from secretmanager
+      "", //manifestbucket_name
       acl, //ACL value for xaccount bucket write
-      "", //manifest_prefix,
+      "", //manifest_path,
       "true", //coordinatetransformtoWgs84      
     )
   }
 }
 
-function datapipeServiceNowTable(construct: cdk.Construct, APIName: string, appnameAndEnv: string, 
-  secretmanager: secretsmanager.Secret, region: string, lambdaRole: iam.IRole, urlsecretHint: string,
-  handler: string, buildcommand: string, query_string_default:string,query_string_date:string, 
-  output_prefix:string,output_filename:string,s3_manifestbucket_name:string,aclValue:string,manifest_prefix:string,ctransform:string) {
+function datapipeServiceNowTable(
+  construct: cdk.Construct, 
+  APIName: string, 
+  appnameAndEnv: string, 
+  secretmanager: secretsmanager.Secret, 
+  region: string, 
+  lambdaRole: iam.IRole, 
+  handler: string, 
+  buildcommand: string, 
+  query_string_default:string,
+  query_string_date:string, 
+  output_path:string,
+  output_filename:string,
+  manifestbucket_name:string,
+  aclValue:string,
+  manifest_path:string,
+  ctransform:string) {
 
 
   const resourcenaming = "-" + APIName + "-" + appnameAndEnv
@@ -88,21 +100,20 @@ function datapipeServiceNowTable(construct: cdk.Construct, APIName: string, appn
     handler: handler,
     runtime: lambda.Runtime.JAVA_8,
     environment: {
-      "secrets": secretmanager.secretArn,
+      "secret_arn": secretmanager.secretArn,
       "region": region,
-      "service_url": urlsecretHint,
       "query_string_default": query_string_default,
       "query_string_date": query_string_date,
       "output_split_limit": "1500",
-      "output_prefix": output_prefix,
-      "output_filename": output_filename,
       "api_limit": "1000",
-      "s3_databucket_name": databucket.bucketName,
-      "s3_manifestbucket_name": s3_manifestbucket_name,
-      "arn":aclValue, 
-      "manifest_prefix":manifest_prefix,
+      "output_bucket": databucket.bucketName,
+      "output_path": output_path,
+      "output_filename": output_filename,
+      "manifest_bucket": manifestbucket_name,
+      "manifest_path":manifest_path,
+      "manifest_arn":aclValue, 
       "coordinate_transform": ctransform,
-      "fullscan":"" 
+      "fullscans":"" 
     },
     role: lambdaRole
   });

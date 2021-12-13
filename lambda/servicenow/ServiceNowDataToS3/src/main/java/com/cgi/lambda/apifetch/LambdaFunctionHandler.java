@@ -72,55 +72,52 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 
 		this.context = context;
 		this.logger = new SimpleLambdaLogger(this.context);
-		
-		//String username = System.getenv("username");
-		//String password = System.getenv("password");
-		//String url = System.getenv("service_url");
-		
-		String username = null;
-		String password = null;
-		String url = null;
+
 		
 		String secretArn = System.getenv("secret_arn");
-		
 		this.region = System.getenv("region");
-		
-		SecretsManagerClient secretsClient = SecretsManagerClient.builder().region(Region.of(region)).build();
-		GetSecretValueRequest valueRequest = GetSecretValueRequest.builder().secretId(secretArn).build();
-		GetSecretValueResponse valueResponse = secretsClient.getSecretValue(valueRequest);
-		String secretJson = valueResponse.secretString();
 
-		try {
-			JSONObject sj = new JSONObject(secretJson);
-			username = sj.getString("username");
-			password = sj.getString("password");
-			url = sj.getString("url");
-		} catch (Exception e) {
-			this.logger.log("Secret retrieve error: '" + e.toString() + "', '" + e.getMessage() + "'");
-			return "";
-		}
-		
-		String inIncrement = System.getenv("api_limit");
-		String inOutputSplitLimit = System.getenv("output_split_limit");
 		String queryStringDefault = System.getenv("query_string_default");
 		String queryStringDate = System.getenv("query_string_date");
+		
+		String inOutputSplitLimit = System.getenv("output_split_limit");
+		String inIncrement = System.getenv("api_limit");
 
-		
-		// output file   ==>>  s3://<outputBucket>/<outputPath>/table.<outputFileName>.<now>.batch.<now>.fullscanned.false.json
-		// manifest file ==>>  s3://<manifestBucket>/<manifestPath>/manifest-table.<outputFileName>.<now>.batch.<now>.fullscanned.false.json.json
-		
-		this.outputBucket = System.getenv("s3_bucket_name");
+		this.outputBucket = System.getenv("output_bucket");
 		this.outputPath = System.getenv("output_path");
 		this.outputFileName = System.getenv("output_filename");
 		
 		this.manifestBucket = System.getenv("manifest_bucket"); 
 		this.manifestPath = System.getenv("manifest_path"); 
-		
+		this.manifestArn = System.getenv("manifest_arn");
 		
 		String inCoordinateTransform = System.getenv("coordinate_transform");
 		boolean coordinateTransform = inCoordinateTransform.trim().equalsIgnoreCase("true") ? true : false; 
+
+		this.fullscans = System.getenv("fullscans");
 		
-		//String sourceName = "u_case";
+		String username = null;
+		String password = null;
+		String url = null;
+		
+
+		try {
+			SecretsManagerClient secretsClient = SecretsManagerClient.builder().region(Region.of(this.region)).build();
+			GetSecretValueRequest valueRequest = GetSecretValueRequest.builder().secretId(secretArn).build();
+			GetSecretValueResponse valueResponse = secretsClient.getSecretValue(valueRequest);
+			String secretJson = valueResponse.secretString();
+
+			JSONObject sj = new JSONObject(secretJson);
+			username = sj.getString("username");
+			password = sj.getString("password");
+			url = sj.getString("url");
+			
+			secretsClient.close();
+			
+		} catch (Exception e) {
+			this.logger.log("Secret retrieve error: '" + e.toString() + "', '" + e.getMessage() + "'");
+			return "";
+		}
 		
 		
 		this.logger.log("Input: " + input);
