@@ -25,6 +25,7 @@ public class ServiceNowApiFetch {
 	
 	private SimpleLogger logger = null;
 	private SimpleWriter writer = null;
+	private ManifestCreator manifestCreator = null;
 	
 	private String username = null;
 	private String password = null;
@@ -64,6 +65,11 @@ public class ServiceNowApiFetch {
 		if (this.outputSplitLimit < 0) this.outputSplitLimit = Integer.valueOf(1500);
 		this.coordinateTransform = coordinateTransform;
 		this.sourceName = sourceName;
+	}
+	
+
+	public void setManifestCreator(ManifestCreator manifestCreator) {
+		this.manifestCreator = manifestCreator;
 	}
 	
 	
@@ -109,6 +115,7 @@ public class ServiceNowApiFetch {
 				
 			//this.logger.log("## raw data: " + data);
 			// TODO: check data for invalid characters
+			// HUOM: Ei toimi koska json voi sisältää kommentteja joissa mitä tahansa merkkejä (esim <url> tjsp.)
 			this.validate(data);
 		} catch (Exception e) {
 			// Isto Saarinen 2021-12-01: muutettu IOException => Exception
@@ -141,24 +148,34 @@ public class ServiceNowApiFetch {
 					return false;
 				} else if (this.enrichmentCenter.enrichedList.size() == 1) {
 					this.logger.log("single array found");
-					//saveData(newJsonString, "incidents/" + new SimpleDateFormat("dd.MM.yyyy").format(new Date()) + "/" + now + "/" + "u_case.json");
-					String fileName = writer.createOutputFileName(this.sourceName);
-					writer.writeData(fileName, newJsonString);
+					FileSpec outputFile = writer.makeDataFileName(this.sourceName);
+					if(writer.writeDataFile(outputFile, newJsonString)) {
+						if (this.manifestCreator != null) {
+							this.manifestCreator.createManifest(outputFile);
+						}
+					}
 					this.logger.log("single array ended");
 				} else { // loop through array
 					this.logger.log("multiarray found");
 					int size = this.enrichmentCenter.enrichedList.size();
 					for (int i = 0; i < size; i++) {
-						//saveData(enrichmentCenter.EnrichedList.get(i).toString(), "incidents/" + (new SimpleDateFormat("dd.MM.yyyy").format(new Date()) + "/" + now + "/" + "u_case.json"));
-						String fileName = writer.createOutputFileName(this.sourceName);
-						writer.writeData(fileName, this.enrichmentCenter.enrichedList.get(i).toString());
+						FileSpec outputFile = writer.makeDataFileName(this.sourceName);
+						if (writer.writeDataFile(outputFile, this.enrichmentCenter.enrichedList.get(i).toString())) {
+							if (this.manifestCreator != null) {
+								this.manifestCreator.createManifest(outputFile);
+							}
+						}
 					}
 					this.logger.log("multiarray ended");
 				}
 
 			} else {
-				String fileName = writer.createOutputFileName(this.sourceName);
-				writer.writeData(fileName, data);
+				FileSpec outputFile = writer.makeDataFileName(this.sourceName);
+				if (writer.writeDataFile(outputFile, data)) {
+					if (this.manifestCreator != null) {
+						this.manifestCreator.createManifest(outputFile);
+					}
+				}
 				this.logger.log("result written");
 			}
 			
