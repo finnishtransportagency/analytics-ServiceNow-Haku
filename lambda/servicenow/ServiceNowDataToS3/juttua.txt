@@ -1,0 +1,35 @@
+
+s3://
+file-load-ade-runtime-prod/
+manifest/servicenow2_u_case/
+manifest-table.servicenow2_u_case.1639368952825.batch.1639368952825.fullscanned.false.json.json
+
+{"entries":[{"mandatory":"true","url":"s3://servicenow2stack-servicenowadenew89abb461-eysouo5bh2fc/u_case/table.u_case.1639368952825.batch.1639368952825.fullscanned.false.json"}],"columns":["DATA"]}
+
+
+
+data file :
+s3://
+servicenow2stack-servicenowadenew89abb461-eysouo5bh2fc/
+u_case/
+table.u_case.1639368952825.batch.1639368952825.fullscanned.false.json
+
+
+
+		String username = "case.reader";
+		String password = "xo8bmhQRyTlL8RBaVgK0";
+		String url = "https://liikennevirasto.service-now.com/api/now/table/task";
+		
+		
+		String outputBucket   = "c:\\VM\\shared\\vv\\servicenow\\mockdatabucket";
+		
+		String outputBucket   = "c:\\VM\\shared\\vv\\servicenow\\mockmanifestbucket";
+		
+		
+		
+		
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>secretsmanager</artifactId>
+      <version>2.17.46</version>
+    </dependency>

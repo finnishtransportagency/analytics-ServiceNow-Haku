@@ -54,6 +54,8 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 	private String manifestPath = null;
 	private String manifestArn = null;
 	
+	private String templateBucket = null;
+	private String templatePath = null;
 	
 	
 	private String charset = "UTF-8";
@@ -171,11 +173,16 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 		}
 		
 
+		ManifestCreator manifestCreator = null;
+
 		String template = this.readManifestTemplate();
-		
-		ManifestCreator manifestCreator = new ManifestCreator(this.logger, this);
-		manifestCreator.setTemplate(template);
-		
+		if (!template.isEmpty() && !this.manifestArn.isEmpty() && !this.manifestBucket.isEmpty() && !this.manifestPath.isEmpty()) {
+			manifestCreator = new ManifestCreator(this.logger, this);
+			manifestCreator.setTemplate(template);
+			this.logger.log("Manifest resources defined and template found. Generate manifest(s) for data files.");
+		} else {
+			this.logger.log("Manifest resources are not defined. Do not generate manifest(s).");
+		}
 		
 		ServiceNowApiFetch api = new ServiceNowApiFetch(this.logger, this, username, password, url,
 				queryStringDefault, queryStringDate, this.argOffset, this.argLimit, increment, outputSplitLimit,
@@ -193,15 +200,16 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 	
 	public String readManifestTemplate() {
 		String content = "";
-		try {
-			AmazonS3 s3Client = AmazonS3Client.builder().withRegion(this.region).build();
-			content = s3Client.getObjectAsString(this.manifestBucket, this.manifestPath + "/" + this.outputFileName + ".json");
-		} catch (Exception e) {
-			System.err.println("Error:Fatal: could not read manifest template");
-			System.out.println("trying to read manifest template from 's3://" + this.manifestBucket + "/" + this.manifestPath + "/" + this.outputFileName + "'");
-			content = "";
+		if (!this.templateBucket.isEmpty() && !this.templatePath.isEmpty()) {
+			try {
+				AmazonS3 s3Client = AmazonS3Client.builder().withRegion(this.region).build();
+				content = s3Client.getObjectAsString(this.templateBucket, this.templatePath + "/" + this.outputFileName + ".json");
+			} catch (Exception e) {
+				System.err.println("Error:Fatal: could not read manifest template");
+				System.out.println("trying to read manifest template from 's3://" + this.manifestBucket + "/" + this.manifestPath + "/" + this.outputFileName + "'");
+				content = "";
+			}
 		}
-
 		return content;
 	}
 

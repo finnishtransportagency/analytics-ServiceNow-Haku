@@ -52,7 +52,7 @@ public class TestServiceNowApiFetch implements SimpleLogger, SimpleWriter {
 		
 		String startDateStr = "2021-10-29";
 		String endDateStr = "2021-10-29";
-		
+
 
 		String template = "{\"entries\":[],\"columns\":[\"DATA\"]}";
 	
