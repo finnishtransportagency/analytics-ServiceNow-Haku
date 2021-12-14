@@ -24,6 +24,8 @@ coverage/
 *~
 .idea
 junit.xml
+*target*
+*.iml
 
 # We don't want tsconfig at the root
 /tsconfig.json

@@ -23,7 +23,7 @@ export class ServerlessServiceStack extends cdk.Stack {
       { //DO NOT change this object, it will create new blank secretmanager 
         generateSecretString: {
           secretStringTemplate: '{"username": "api username", "url": "api url"}',
-		  generateStringKey: "password",
+		      generateStringKey: "password",
         },
       },
     );
@@ -40,15 +40,15 @@ export class ServerlessServiceStack extends cdk.Stack {
     Replicate this for more lambda+bucket+crontrigger tasks sets and set secrets to secrets manager
     */
 	
-	// Lambdan nimeksi tulee "ServiceNowdev-deploy-Serv-APIFetchnowtabletaskServ-s4WUIIwyHRxU"
-	// => Selke‰ taulun/l‰hteen nimi puuttuu.
-	// Nimeksi pit‰isi riitt‰‰:
-	// "ServiceNow-" + <dev|prod> + "-APIFetch-" + <sourceName> + "-" + <generated id>
-	// Sourcename pit‰‰ olla l‰hdett‰ kuvaava ja pit‰isi olla vain yksi / l‰hde.
-	// Ei tosin haittaa vaikka per‰‰n laittaa generoidun tunnisteen
+	  // Lambdan nimeksi tulee "ServiceNowdev-deploy-Serv-APIFetchnowtabletaskServ-s4WUIIwyHRxU"
+	  // => Selke√§ taulun/lÔøΩhteen nimi puuttuu.
+	  // Nimeksi pit√§isi riitt√§√§:
+	  // "ServiceNow-" + <dev|prod> + "-APIFetch-" + <sourceName> + "-" + <generated id>
+	  // Sourcename pit√§√§ olla l√§hdett√§ kuvaava ja pit√§isi olla vain yksi / l√§hde.
+	  // Ei tosin haittaa vaikka per√§√§n laittaa generoidun tunnisteen
     datapipeServiceNowTable(
       this,						// construct
-      "u_case",		// APIName ==>> / merkit n‰ytt‰‰ h‰vi‰v‰n nimest‰
+      "u_case",		// APIName ==>> / merkit n√§ytt√§√§ h√§vi√§v√§n nimest√§
       this.stackName,			// stackname = appName-environmentName
       secretmanagerForSecrets,	// secretmanager for storing secrets
       this.region,				// region that is beign used      
@@ -67,7 +67,7 @@ export class ServerlessServiceStack extends cdk.Stack {
 /*
     datapipeServiceNowTable(
       this,						// construct
-      "services",		// APIName ==>> / merkit n‰ytt‰‰ h‰vi‰v‰n nimest‰
+      "services",		// APIName ==>> / merkit n√§ytt√§√§ h√§vi√§v√§n nimest√§
       this.stackName,			// stackname = appName-environmentName
       secretmanagerForSecrets,	// secretmanager for storing secrets
       this.region,				// region that is beign used      
@@ -106,13 +106,13 @@ function datapipeServiceNowTable(
   manifest_path:string,
   ctransform:string) {
 
-
+/*
   const resourcenaming = "-" + APIName + "-" + appnameAndEnv
   const databucket = new s3.Bucket(construct, 'DataBucket' + resourcenaming, {
     removalPolicy: cdk.RemovalPolicy.DESTROY,
   });
-  
-  
+*/
+/*  
   const apiLambda = new lambda.Function(construct, 'APIFetch' + resourcenaming, {
     code: lambda.Code.fromAsset
       ("./lambda/servicenow/ServiceNowDataToS3/",
@@ -151,6 +151,8 @@ function datapipeServiceNowTable(
   
   // Kaiva jostain toimiiko
   // console.log("lambda name" + apiLambda.getName());
+
+  console.log("function name = '" + apiLambda.functionName + "'")
   
   secretmanager.grantRead(apiLambda)
   databucket.grantPut(apiLambda)
@@ -162,6 +164,8 @@ function datapipeServiceNowTable(
   cdk.Tags.of(databucket).add("APIFetch", APIName)
   cdk.Tags.of(apiLambda).add("APIFetch",APIName)
   cdk.Tags.of(rule).add("APIFetch", APIName)
+*/
+
 }
 //stepfunction (optional, nice to have to loop through dates)
 
