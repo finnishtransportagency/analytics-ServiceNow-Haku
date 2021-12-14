@@ -44,12 +44,12 @@ export class CICDStack extends Stack {
         });
   
 
-    const deployStage = pipeline.addStage( new ApplicationStageDev(this, appname+"-dev", {
+    const deployStage = pipeline.addStage( new ApplicationStageDev(this, appname+"-dev-deploy", {
       env: { account: this.account, region: this.region }, 
       appname:appname
     },
     )); 
-    const proddeployStage = pipeline.addStage(new ApplicationStageProd(this, appname+"-prod", {
+    const proddeployStage = pipeline.addStage(new ApplicationStageProd(this, appname+"-prod-deploy", {
       env: { account: this.account, region: this.region },
       appname:appname    
     }));

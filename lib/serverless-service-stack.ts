@@ -48,7 +48,7 @@ export class ServerlessServiceStack extends cdk.Stack {
 	  // Ei tosin haittaa vaikka perään laittaa generoidun tunnisteen
     datapipeServiceNowTable(
       this,						// construct
-      "u_case",		// APIName ==>> / merkit näyttää häviävän nimestä
+      "u_case",		// APIName ==>> /_ merkit näyttää häviävän nimestä
       this.stackName,			// stackname = appName-environmentName
       secretmanagerForSecrets,	// secretmanager for storing secrets
       this.region,				// region that is beign used      
