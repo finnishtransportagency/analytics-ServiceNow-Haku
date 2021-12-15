@@ -37,7 +37,7 @@ export class ServerlessServiceStack extends cdk.Stack {
     //remember to add username,password,url hints to secretmanager so lambda can fetch them
     
 
-    var dataBucketName = "sn-dev-data" // appname.toLowerCase() + "-" + env.toLowerCase() + "-data"
+    var dataBucketName = "data" // appname.toLowerCase() + "-" + env.toLowerCase() + "-data"
     // alkuperäinen: 'data' + this.stackName
     const dataBucket = new s3.Bucket(this, dataBucketName, {
       removalPolicy: cdk.RemovalPolicy.DESTROY
@@ -103,10 +103,10 @@ function datapipeServiceNowTable(
     removalPolicy: cdk.RemovalPolicy.DESTROY,
   });
 */
-/*
+
   var resourcename = appname + "-" + env
 
-  const apiLambda = new lambda.Function(construct, resourcename + "-" + sourcename, {
+  const apiLambda = new lambda.Function(construct, "sndt3", {
     code: lambda.Code.fromAsset
       ("./lambda/servicenow/ServiceNowDataToS3/",
         {
@@ -142,17 +142,17 @@ function datapipeServiceNowTable(
     role: lambdaRole
   });
   
-  secret.grantRead(apiLambda)
-  output_bucket.grantPut(apiLambda)
+  //secret.grantRead(apiLambda)
+  //output_bucket.grantPut(apiLambda)
 
-  const rule = new Rule(construct, "dailyRun-" + resourcename, {
-    schedule: Schedule.expression("cron(15 3 * * ? *)"),
-      targets: [new LambdaFunction(apiLambda)], 
-  });
-  cdk.Tags.of(output_bucket).add("APIFetch", sourcename)
-  cdk.Tags.of(apiLambda).add("APIFetch", sourcename)
-  cdk.Tags.of(rule).add("APIFetch", sourcename)
-*/
+  //const rule = new Rule(construct, "dailyRun-" + resourcename, {
+  //  schedule: Schedule.expression("cron(15 3 * * ? *)"),
+  //    targets: [new LambdaFunction(apiLambda)], 
+  //});
+  //cdk.Tags.of(output_bucket).add("APIFetch", sourcename)
+  //cdk.Tags.of(apiLambda).add("APIFetch", sourcename)
+  //cdk.Tags.of(rule).add("APIFetch", sourcename)
+
 
 }
 //stepfunction (optional, nice to have to loop through dates)
