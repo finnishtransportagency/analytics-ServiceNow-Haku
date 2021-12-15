@@ -52,6 +52,8 @@ export class CICDStack extends Stack {
       appname:appname
     },
     ));
+
+    
 /*    
     const proddeployStage = pipeline.addStage(new ApplicationStageProd(this, appname+"-prod-deploy", {
       env: { account: this.account, region: this.region },
