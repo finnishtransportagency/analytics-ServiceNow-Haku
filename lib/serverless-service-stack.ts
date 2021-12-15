@@ -19,7 +19,11 @@ export class ServerlessServiceStack extends cdk.Stack {
     );
 
 
-    const secret = new secretsmanager.Secret(this, "APISecrets" + this.stackName,
+    var appname = this.stackName.split("-").slice(0)[0]
+    var env = this.stackName.split("-").slice(-1)[0]
+
+    const secret = new secretsmanager.Secret(this, 
+      appname + "API" + env,
       { //DO NOT change this object, it will create new blank secretmanager 
         generateSecretString: {
           secretStringTemplate: '{"username": "api username", "url": "api url"}',
@@ -37,7 +41,6 @@ export class ServerlessServiceStack extends cdk.Stack {
     });
     */
 
-    var env = this.stackName.split("-").slice(-1)[0]
     var acl = this.node.tryGetContext('ADE'+env+'ACL')
     /*
     Replicate this for more lambda+bucket+crontrigger tasks sets and set secrets to secrets manager
@@ -51,23 +54,25 @@ export class ServerlessServiceStack extends cdk.Stack {
 	  // Ei tosin haittaa vaikka perään laittaa generoidun tunnisteen
     datapipeServiceNowTable(
       this,						// construct
-      "now/table/task",		    // APIName ==>> /_ merkit näyttää häviävän nimestä
-      this.stackName,			// stackname = appName-environmentName
-      secret,	         // secret name
+      "incident",		// APIName ==>> /_ merkit näyttää häviävän nimestä
+      appname,			// stackname = appName-environmentName
+      env,
+      secret,	            // secret name
       this.region,				// region that is beign used      
-      lambdaRole,				// role that allows cross region bucket put
+      lambdaRole,				  // role that allows cross region bucket put
       "com.cgi.lambda.apifetch.LambdaFunctionHandler", //handler used in code 
       "mvn clean install && cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/", //buildcommand
       "",		// Fill in query_string_default query string used to get data from API
       "",		// Fill in query_string_date date modifier if we want exact date
-      "servicenow2_u_case",		// Fill in output_path
+      "servicenow2_u_case",		// Fill in s3 output_path
       "servicenow2_u_case",		// Fill in output_filename 
       "file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
-      acl,		// ACL value for xaccount bucket write
       "manifest/servicenow2_u_case",		// Fill in manifest_path,
+      acl,		// ACL value for xaccount bucket write
       "true",	// coordinatetransformtoWgs84      
     )
-/*
+
+    /*
     datapipeServiceNowTable(
       this,						// construct
       "services",		// APIName ==>> / merkit näyttää häviävän nimestä
@@ -86,7 +91,7 @@ export class ServerlessServiceStack extends cdk.Stack {
       "",		// Fill in manifest_path,
       "true",	// coordinatetransformtoWgs84      
     )
-*/
+    */
 
   }
 }
@@ -94,7 +99,8 @@ export class ServerlessServiceStack extends cdk.Stack {
 function datapipeServiceNowTable(
   construct: cdk.Construct,
   APIName: string,
-  appnameAndEnv: string,
+  appname: string,
+  env: string,
   secretmanager: secretsmanager.Secret,
   region: string,
   lambdaRole: iam.IRole,
@@ -105,8 +111,8 @@ function datapipeServiceNowTable(
   output_path:string,
   output_filename:string,
   manifestbucket_name:string,
-  aclValue:string,
   manifest_path:string,
+  aclValue:string,
   ctransform:string) {
 
 /*
@@ -152,10 +158,7 @@ function datapipeServiceNowTable(
     role: lambdaRole
   });
   
-  // Kaiva jostain toimiiko
-  // console.log("lambda name" + apiLambda.getName());
-
-  console.log("function name = '" + apiLambda.functionName + "'")
+  //console.log("function name = '" + apiLambda.functionName + "'")
   
   secretmanager.grantRead(apiLambda)
   databucket.grantPut(apiLambda)

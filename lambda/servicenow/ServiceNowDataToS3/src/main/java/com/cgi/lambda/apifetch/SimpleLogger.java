@@ -6,5 +6,4 @@ public interface SimpleLogger {
 	public void log(String s);
 	
 	
-	
 }

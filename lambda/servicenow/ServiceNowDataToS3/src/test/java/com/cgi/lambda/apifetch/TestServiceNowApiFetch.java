@@ -20,7 +20,6 @@ public class TestServiceNowApiFetch implements SimpleLogger, SimpleWriter {
 	}
 
 	
-	
 
 	
 	private String outputBucket   = "servicenow-data-output-bucket";

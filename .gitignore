@@ -26,6 +26,12 @@ coverage/
 junit.xml
 *target*
 *.iml
+lib/*.d.ts
+lib/*.js
+bin/*.d.ts
+bin/*.js
+test/*.d.ts
+test/*.js
 
 # We don't want tsconfig at the root
 /tsconfig.json

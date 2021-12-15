@@ -21,6 +21,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
+
 public class LambdaFunctionHandlerOld implements RequestHandler<Object, String> {
 	// Use environmental variables in AWS Lambda to set values of these
 	private String username=System.getenv("username");

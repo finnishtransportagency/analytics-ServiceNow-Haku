@@ -19,6 +19,5 @@ public class SimpleLambdaLogger implements SimpleLogger {
 			this.logger.log(s);
 		}
 	}
-
 	
 }

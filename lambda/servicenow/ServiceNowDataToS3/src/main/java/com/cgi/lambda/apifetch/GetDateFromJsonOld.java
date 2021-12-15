@@ -12,7 +12,6 @@ public class GetDateFromJsonOld {
 		
 	}
 	
-	
 	public String getfromJson() {
 		try {
 		JSONObject inputdata = new JSONObject(json);

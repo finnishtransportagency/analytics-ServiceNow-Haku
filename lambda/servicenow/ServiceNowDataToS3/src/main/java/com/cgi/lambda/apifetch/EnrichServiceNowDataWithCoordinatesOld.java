@@ -15,7 +15,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-
 /**
  * Class to add wgs84 coordinates to JSON formed data gotten from Servicenow
  * @author alapeijario

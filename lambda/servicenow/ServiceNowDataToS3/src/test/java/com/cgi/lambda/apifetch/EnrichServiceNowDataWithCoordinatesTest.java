@@ -3,19 +3,20 @@ package com.cgi.lambda.apifetch;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
+//import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+//import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Scanner;
+//import java.util.Scanner;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
+//import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.amazonaws.services.lambda.runtime.Context;
-import com.cgi.lambda.apifetch.LambdaFunctionHandlerOld;
+//import com.amazonaws.services.lambda.runtime.Context;
+//import com.cgi.lambda.apifetch.LambdaFunctionHandlerOld;
+
 
 public class EnrichServiceNowDataWithCoordinatesTest {
 

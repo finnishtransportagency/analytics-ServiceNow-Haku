@@ -9,9 +9,6 @@ import org.json.JSONObject;
 
 
 
-
-
-
 public class ManifestCreator {
 	
 	private String template = "";

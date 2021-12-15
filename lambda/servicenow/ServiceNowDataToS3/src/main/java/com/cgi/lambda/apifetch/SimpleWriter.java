@@ -8,7 +8,6 @@ public interface SimpleWriter {
 
 	public FileSpec makeDataFileName(String sourceName);
 
-
 	
 	public boolean writeManifestFile(FileSpec outputFile, String data);
 

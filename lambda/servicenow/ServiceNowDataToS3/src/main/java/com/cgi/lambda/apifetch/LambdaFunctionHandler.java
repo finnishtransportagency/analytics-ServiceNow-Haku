@@ -41,6 +41,7 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 	//queryStringDefault = "sysparm_query=sys_class_name%3Dsn_customerservice_casesys_updated_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()%5EORsys_created_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()&sysparm_display_value=true";
 	//queryStringDate    = "sysparm_query=sys_class_name%3Dsn_customerservice_case%5Esys_created_onON{DATEFILTER}@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27start%27)@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27end%27)&sysparm_display_value=true";
 
+
 	private String argOffset = "&sysparm_offset=";
 	private String argLimit = "&sysparm_limit=";
 	private Integer DEFAULT_INCREMENT = Integer.valueOf(1000);
@@ -53,9 +54,10 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 	private String manifestBucket = null;
 	private String manifestPath = null;
 	private String manifestArn = null;
+	private String manifestTemplate = "{\"entries\":[],\"columns\":[\"DATA\"]}";
 	
-	private String templateBucket = null;
-	private String templatePath = null;
+	//private String templateBucket = null;
+	//private String templatePath = null;
 	
 	
 	private String charset = "UTF-8";
@@ -171,14 +173,13 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 			this.logger.log("Invalid output split limit parameter. Use default value 1500");
 			outputSplitLimit = 1500;
 		}
-		
 
 		ManifestCreator manifestCreator = null;
 
-		String template = this.readManifestTemplate();
-		if (!template.isEmpty() && !this.manifestArn.isEmpty() && !this.manifestBucket.isEmpty() && !this.manifestPath.isEmpty()) {
+		//String template = this.readManifestTemplate();
+		if (!this.manifestArn.isEmpty() && !this.manifestBucket.isEmpty() && !this.manifestPath.isEmpty()) {
 			manifestCreator = new ManifestCreator(this.logger, this);
-			manifestCreator.setTemplate(template);
+			manifestCreator.setTemplate(manifestTemplate);
 			this.logger.log("Manifest resources defined and template found. Generate manifest(s) for data files.");
 		} else {
 			this.logger.log("Manifest resources are not defined. Do not generate manifest(s).");
@@ -197,7 +198,7 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 
 	
 	
-	
+	/*
 	public String readManifestTemplate() {
 		String content = "";
 		if (!this.templateBucket.isEmpty() && !this.templatePath.isEmpty()) {
@@ -212,7 +213,7 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 		}
 		return content;
 	}
-
+	*/
 	
 	
 	

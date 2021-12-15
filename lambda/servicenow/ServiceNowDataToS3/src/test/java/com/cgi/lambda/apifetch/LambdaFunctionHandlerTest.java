@@ -7,7 +7,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.cgi.lambda.apifetch.LambdaFunctionHandlerOld;
+//import com.cgi.lambda.apifetch.LambdaFunctionHandlerOld;
+
 
 /**
  * A simple test harness for locally invoking your Lambda function handler.

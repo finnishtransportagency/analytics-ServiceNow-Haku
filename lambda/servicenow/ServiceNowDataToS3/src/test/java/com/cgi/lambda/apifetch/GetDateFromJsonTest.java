@@ -6,7 +6,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.amazonaws.services.lambda.runtime.Context;
+//import com.amazonaws.services.lambda.runtime.Context;
 
 public class GetDateFromJsonTest {
     private static Object input;
@@ -16,7 +16,6 @@ public class GetDateFromJsonTest {
         // TODO: set up your sample input object here.
         input = null;
     }
-
 
 
     @Test
