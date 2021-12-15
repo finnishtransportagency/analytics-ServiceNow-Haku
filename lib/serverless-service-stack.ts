@@ -149,6 +149,7 @@ function datapipeServiceNowTable(
     schedule: Schedule.expression("cron(15 3 * * ? *)"),
       targets: [new LambdaFunction(apiLambda)], 
   });
+  
   cdk.Tags.of(output_bucket).add("APIFetch", sourcename)
   cdk.Tags.of(apiLambda).add("APIFetch", sourcename)
   cdk.Tags.of(rule).add("APIFetch", sourcename)
