@@ -37,10 +37,10 @@ export class ServerlessServiceStack extends cdk.Stack {
     //remember to add username,password,url hints to secretmanager so lambda can fetch them
     
 
-    var dataBucketName = appname.toLowerCase() + "-" + env.toLowerCase() + "-data"
+    var dataBucketName = "sn-dev-data" // appname.toLowerCase() + "-" + env.toLowerCase() + "-data"
     // alkuperäinen: 'data' + this.stackName
     const dataBucket = new s3.Bucket(this, dataBucketName, {
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      removalPolicy: cdk.RemovalPolicy.DESTROY
     });
 
     var acl = this.node.tryGetContext('ADE'+env+'ACL')
