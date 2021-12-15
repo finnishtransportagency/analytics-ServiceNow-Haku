@@ -103,7 +103,7 @@ function datapipeServiceNowTable(
     removalPolicy: cdk.RemovalPolicy.DESTROY,
   });
 */
-
+/*
   var resourcename = appname + "-" + env
 
   const apiLambda = new lambda.Function(construct, resourcename + "-" + sourcename, {
@@ -134,8 +134,8 @@ function datapipeServiceNowTable(
       "output_path": output_path,
       "output_filename": output_filename,
       "manifest_bucket": manifest_bucket,
-      "manifest_path":manifest_path,
-      "manifest_arn":aclValue,
+      "manifest_path": manifest_path,
+      "manifest_arn": aclValue,
       "coordinate_transform": ctransform,
       "fullscans":"" 
     },
@@ -152,7 +152,7 @@ function datapipeServiceNowTable(
   cdk.Tags.of(output_bucket).add("APIFetch", sourcename)
   cdk.Tags.of(apiLambda).add("APIFetch", sourcename)
   cdk.Tags.of(rule).add("APIFetch", sourcename)
-
+*/
 
 }
 //stepfunction (optional, nice to have to loop through dates)

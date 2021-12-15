@@ -53,14 +53,12 @@ export class CICDStack extends Stack {
     },
     ));
 
-    
-/*    
     const proddeployStage = pipeline.addStage(new ApplicationStageProd(this, appname+"-prod-deploy", {
       env: { account: this.account, region: this.region },
       appname:appname    
     }));
     proddeployStage.addPre(new ManualApprovalStep('Pre-production check'))    
-  */
 
+    
   }
   }
