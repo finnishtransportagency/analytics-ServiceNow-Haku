@@ -23,8 +23,7 @@ export class ServerlessServiceStack extends cdk.Stack {
     var env = this.stackName.split("-").slice(-1)[0]
 
     const secret = new secretsmanager.Secret(this, 
-      "ServiceNowAPIdev",
-      //appname + "API" + env,
+      appname + "API" + env,
       { //DO NOT change this object, it will create new blank secretmanager 
         generateSecretString: {
           secretStringTemplate: '{"username": "api username", "url": "api url"}',
