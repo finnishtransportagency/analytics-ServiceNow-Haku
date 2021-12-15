@@ -18,8 +18,8 @@ export class ServerlessServiceStack extends cdk.Stack {
       { mutable: true },
     );
 
-	// stackName == "ServiceNowdevdepl-hgquSPWmczRQ"
-    const secretmanagerForSecrets = new secretsmanager.Secret(this, "APISecrets" + this.stackName,
+
+    const secret = new secretsmanager.Secret(this, "APISecrets" + this.stackName,
       { //DO NOT change this object, it will create new blank secretmanager 
         generateSecretString: {
           secretStringTemplate: '{"username": "api username", "url": "api url"}',
@@ -28,12 +28,15 @@ export class ServerlessServiceStack extends cdk.Stack {
       },
     );
 
-    secretmanagerForSecrets.applyRemovalPolicy(RemovalPolicy.RETAIN)
+    secret.applyRemovalPolicy(RemovalPolicy.RETAIN)
     //remember to add username,password,url hints to secretmanager so lambda can fetch them
     
+    /*
     const landingBucket = new s3.Bucket(this, 'data' + this.stackName, {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
+    */
+
     var env = this.stackName.split("-").slice(-1)[0]
     var acl = this.node.tryGetContext('ADE'+env+'ACL')
     /*
@@ -41,16 +44,16 @@ export class ServerlessServiceStack extends cdk.Stack {
     */
 	
 	  // Lambdan nimeksi tulee "ServiceNowdev-deploy-Serv-APIFetchnowtabletaskServ-s4WUIIwyHRxU"
-	  // => Selkeä taulun/l�hteen nimi puuttuu.
+	  // => Selkeä taulun/lähteen nimi puuttuu.
 	  // Nimeksi pitäisi riittää:
 	  // "ServiceNow-" + <dev|prod> + "-APIFetch-" + <sourceName> + "-" + <generated id>
 	  // Sourcename pitää olla lähdettä kuvaava ja pitäisi olla vain yksi / lähde.
 	  // Ei tosin haittaa vaikka perään laittaa generoidun tunnisteen
     datapipeServiceNowTable(
       this,						// construct
-      "u_case",		// APIName ==>> /_ merkit näyttää häviävän nimestä
+      "now/table/task",		    // APIName ==>> /_ merkit näyttää häviävän nimestä
       this.stackName,			// stackname = appName-environmentName
-      secretmanagerForSecrets,	// secretmanager for storing secrets
+      secret,	         // secret name
       this.region,				// region that is beign used      
       lambdaRole,				// role that allows cross region bucket put
       "com.cgi.lambda.apifetch.LambdaFunctionHandler", //handler used in code 
@@ -162,7 +165,7 @@ function datapipeServiceNowTable(
       targets: [new LambdaFunction(apiLambda)], 
   });
   cdk.Tags.of(databucket).add("APIFetch", APIName)
-  cdk.Tags.of(apiLambda).add("APIFetch",APIName)
+  cdk.Tags.of(apiLambda).add("APIFetch", APIName)
   cdk.Tags.of(rule).add("APIFetch", APIName)
 */
 

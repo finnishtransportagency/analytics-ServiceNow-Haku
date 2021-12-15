@@ -11,15 +11,13 @@ interface stageprops extends StageProps {
 class ApplicationStageDev extends Stage {
   constructor(scope: Construct, id: string, props: stageprops) {
     super(scope, id, props);
-    new ServerlessServiceStack(this, props.appname+'-service-'+"dev",{ env:props.env
-    });
+    new ServerlessServiceStack(this, props.appname+'-service-'+"dev",{ env:props.env });
   }
 }
 class ApplicationStageProd extends Stage {
   constructor(scope: Construct, id: string, props: stageprops) {
     super(scope, id, props);
-    new ServerlessServiceStack(this, props.appname+'-service-'+"prod",{ env:props.env
-    });
+    new ServerlessServiceStack(this, props.appname+'-service-'+"prod",{ env:props.env });
   }
 }
 interface ServiceStackProps extends cdk.StackProps {
@@ -32,16 +30,16 @@ export class CICDStack extends Stack {
     const cloudAssemblyArtifact = new codepipeline.Artifact();
     var branch = "master"
 
-        const pipeline = new CodePipeline(this, appname+'-Pipeline', {
-          dockerEnabledForSelfMutation:true,
-          crossAccountKeys:true,
-          pipelineName: appname+'-Pipeline',
-          synth:  new ShellStep('Synth', {
-          input: CodePipelineSource.connection(this.node.tryGetContext('ownerandapp'), branch, {
-            connectionArn:  `arn:aws:codestar-connections:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:connection/${this.node.tryGetContext('connectionID')}`}),          
-          commands: ['npm ci', 'npm run build', 'npx cdk synth'],            
-          }), 
-        });
+    const pipeline = new CodePipeline(this, appname+'-Pipeline', {
+      dockerEnabledForSelfMutation:true,
+      crossAccountKeys:true,
+      pipelineName: appname+'-Pipeline',
+      synth:  new ShellStep('Synth', {
+        input: CodePipelineSource.connection(this.node.tryGetContext('ownerandapp'), branch, {
+          connectionArn:  `arn:aws:codestar-connections:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:connection/${this.node.tryGetContext('connectionID')}`}),          
+        commands: ['npm ci', 'npm run build', 'npx cdk synth'],            
+      }),
+    });
   
 
     const deployStage = pipeline.addStage( new ApplicationStageDev(this, appname+"-dev-deploy", {
