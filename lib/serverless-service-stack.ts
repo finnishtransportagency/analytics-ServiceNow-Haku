@@ -68,7 +68,7 @@ export class ServerlessServiceStack extends cdk.Stack {
       dataBucket.bucketName,  //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
       "manifest/servicenow2_u_case",		// Fill in manifest_path,
       acl,		// ACL value for xaccount bucket write
-      "true",	// coordinatetransformtoWgs84
+      "true"	// coordinatetransformtoWgs84
     )
 
     // services lambda
@@ -104,9 +104,9 @@ function datapipeServiceNowTable(
   });
 */
 
-  var resourcename = appname + "-" + env
+  var resourcename = appname + "-" + env + "-" + sourcename
 
-  const apiLambda = new lambda.Function(construct, "sndt3" + resourcename, {
+  const apiLambda = new lambda.Function(construct, sourcename, {
     code: lambda.Code.fromAsset
       ("./lambda/servicenow/ServiceNowDataToS3/",
         {
