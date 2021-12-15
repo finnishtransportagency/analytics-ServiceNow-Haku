@@ -94,7 +94,7 @@ function datapipeServiceNowTable(
   output_filename: string,
   manifest_bucket: string,
   manifest_path: string,
-  aclValue: string,
+  manifest_acl: string,
   ctransform: string) {
 
 /*
@@ -106,7 +106,7 @@ function datapipeServiceNowTable(
 
   var resourcename = appname + "-" + env
 
-  const apiLambda = new lambda.Function(construct, "sndt3", {
+  const apiLambda = new lambda.Function(construct, "sndt3" + resourcename, {
     code: lambda.Code.fromAsset
       ("./lambda/servicenow/ServiceNowDataToS3/",
         {
@@ -135,23 +135,23 @@ function datapipeServiceNowTable(
       "output_filename": output_filename,
       "manifest_bucket": manifest_bucket,
       "manifest_path": manifest_path,
-      "manifest_arn": aclValue,
+      "manifest_arn": manifest_acl,
       "coordinate_transform": ctransform,
       "fullscans":"" 
     },
     role: lambdaRole
   });
   
-  //secret.grantRead(apiLambda)
-  //output_bucket.grantPut(apiLambda)
+  secret.grantRead(apiLambda)
+  output_bucket.grantPut(apiLambda)
 
-  //const rule = new Rule(construct, "dailyRun-" + resourcename, {
-  //  schedule: Schedule.expression("cron(15 3 * * ? *)"),
-  //    targets: [new LambdaFunction(apiLambda)], 
-  //});
-  //cdk.Tags.of(output_bucket).add("APIFetch", sourcename)
-  //cdk.Tags.of(apiLambda).add("APIFetch", sourcename)
-  //cdk.Tags.of(rule).add("APIFetch", sourcename)
+  const rule = new Rule(construct, "dailyRun-" + resourcename, {
+    schedule: Schedule.expression("cron(15 3 * * ? *)"),
+      targets: [new LambdaFunction(apiLambda)], 
+  });
+  cdk.Tags.of(output_bucket).add("APIFetch", sourcename)
+  cdk.Tags.of(apiLambda).add("APIFetch", sourcename)
+  cdk.Tags.of(rule).add("APIFetch", sourcename)
 
 
 }
