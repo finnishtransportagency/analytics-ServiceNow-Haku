@@ -45,7 +45,7 @@ public class ServiceNowApiFetch {
 	private EnrichServiceNowDataWithCoordinates enrichmentCenter = null;
 	// regex for accepted or expected characters in Service Now json. most notably alphanumeric chars incl
 	// scandic letters, and chars used in json notation
-	private static final String validchars = "[^a-öA-Ö0-9\\ \\t\\.\\,\\\"\\:\\;\\=\\?\\&\\!\\@\\*\\<\\>\\+\\%\\(\\)\\[\\]\\{\\}\\-\\_\\/\\\\\\']";
+	//private static final String validchars = "[^a-öA-Ö0-9\\ \\t\\.\\,\\\"\\:\\;\\=\\?\\&\\!\\@\\*\\<\\>\\+\\%\\(\\)\\[\\]\\{\\}\\-\\_\\/\\\\\\']";
 
 	
 	
@@ -117,7 +117,7 @@ public class ServiceNowApiFetch {
 			//this.logger.log("## raw data: " + data);
 			// TODO: check data for invalid characters
 			// HUOM: Ei toimi koska json voi sisältää kommentteja joissa mitä tahansa merkkejä (esim <url> tjsp.)
-			this.validate(data);
+			//this.validate(data);
 		} catch (Exception e) {
 			// Isto Saarinen 2021-12-01: muutettu IOException => Exception
 			this.logger.log("Fatal error: Failed to download data");
@@ -198,6 +198,7 @@ public class ServiceNowApiFetch {
 	 * 
 	 * @param data, json merkkijono
 	 */
+	/*
 	private void validate(String data) {
 		// 1. Onko json
 		// todo: tuplatarkastus, eli json muunnokset myohemmassa vaiheessa ajavat saman asian, voi mahd. poistaa
@@ -225,7 +226,7 @@ public class ServiceNowApiFetch {
 			this.logger.log("## Virhe regex tarkistuksessa: " + e.getMessage());
 		}
 	}
-
+	*/
 	
 	/**
 	 * Datan haku päivämäärävälille (tai yhdelle päivälle jos annettu sama päivä)
