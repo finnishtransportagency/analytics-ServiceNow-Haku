@@ -290,7 +290,15 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 	public boolean writeDataFile(FileSpec outputFile, String data) {
 		boolean result = false;
 
-		logger.log("Write data, file name = '" + outputFile.bucket + "/" + outputFile.path + "/" + outputFile.fileName + "'");
+
+		String path = outputFile.path;
+		if (!path.endsWith("/")) {
+			path += "/";
+		}
+		path += outputFile.fileName;
+		String fullPath = outputFile.bucket + "/" + path;
+
+		logger.log("Write data, file name = '" + fullPath + "'");
 
 		try {
 			AmazonS3 s3Client = AmazonS3Client.builder().withRegion(this.region).build();
@@ -300,23 +308,24 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 			objMetadata.setContentType("plain/text");
 			objMetadata.setContentLength(stringByteArray.length);
 
-			s3Client.putObject(outputFile.bucket, outputFile.path + "/" + outputFile.fileName, byteString, objMetadata);
+			s3Client.putObject(outputFile.bucket, path, byteString, objMetadata);
 			result = true;
 
 		} catch (UnsupportedEncodingException e) {
 			//String errorMessage = "Error: Failure to encode file to load in: " + outputFile.bucket + "/" + outputFile.path + "/" + outputFile.fileName;
-			String errorMessage = "Error: encode '" + e.toString() + "', '" + e.getMessage() + "', file name = '" + outputFile.bucket + "/" + outputFile.path + "/" + outputFile.fileName + "'";			this.logger.log(errorMessage);
+			String errorMessage = "Error: encode '" + e.toString() + "', '" + e.getMessage() + "', file name = '" + fullPath + "'";
+			this.logger.log(errorMessage);
 
 			System.err.println(errorMessage);
 			e.printStackTrace();
 		} catch (Exception e) {
 			//String errorMessage = "Error: S3 write error " + outputFile.bucket + "/" + outputFile.path + "/" + outputFile.fileName;
-			String errorMessage = "Error: S3 write '" + e.toString() + "', '" + e.getMessage() + "', file name = '" + outputFile.bucket + "/" + outputFile.path + "/" + outputFile.fileName + "'";
+			String errorMessage = "Error: S3 write '" + e.toString() + "', '" + e.getMessage() + "', file name = '" + fullPath + "'";
 			this.logger.log(errorMessage);
 			System.err.println(errorMessage);
 			e.printStackTrace();
 		}
-		logger.log("Write data, file name = '" + outputFile.bucket + "/" + outputFile.path + "/" + outputFile.fileName + "' => result = " + result);
+		logger.log("Write data, file name = '" + fullPath + "' => result = " + result);
 		return result;
 	}
 
@@ -327,9 +336,14 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 	public boolean writeManifestFile(FileSpec outputFile, String data) {
 		boolean result = false;
 
-		String manifestKey = outputFile.path + "/" + outputFile.fileName;
+		String path = outputFile.path;
+		if (!path.endsWith("/")) {
+			path += "/";
+		}
+		path += outputFile.fileName;
+		String fullPath = outputFile.bucket + "/" + path;
 
-		logger.log("Write manifest, file name = '" + outputFile.bucket + "/" + outputFile.path + "/" + outputFile.fileName + "'");
+		logger.log("Write manifest, file name = '" + fullPath + "'");
 
 		try {
 			AmazonS3 s3Client = AmazonS3Client.builder().withRegion(this.region).build();
@@ -339,7 +353,7 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 			//objMetadata.setContentType("plain/text");
 			objMetadata.setContentLength(stringByteArray.length);
 
-	    	PutObjectRequest request = new PutObjectRequest(outputFile.bucket, manifestKey, byteString, objMetadata);
+	    	PutObjectRequest request = new PutObjectRequest(outputFile.bucket, path, byteString, objMetadata);
 
 	    	Collection<Grant> grantCollection = new ArrayList<Grant>();
 			grantCollection.add( new Grant(new CanonicalGrantee(s3Client.getS3AccountOwner().getId()), Permission.FullControl));
@@ -355,20 +369,20 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 
 		} catch (UnsupportedEncodingException e) {
 			//String errorMessage = "Error: Failure to encode file to load in: " + outputFile.bucket + "/" + outputFile.path + "/" + outputFile.fileName;
-			String errorMessage = "Error: encoding '" + e.toString() + "', '" + e.getMessage() + "', file name = '" + outputFile.bucket + "/" + outputFile.path + "/" + outputFile.fileName + "'";
+			String errorMessage = "Error: encoding '" + e.toString() + "', '" + e.getMessage() + "', file name = '" + fullPath + "'";
 			this.logger.log(errorMessage);
 
 			System.err.println(errorMessage);
 			e.printStackTrace();
 		} catch (Exception e) {
 			//System.err.println("Error:Fatal: could not create new manifest file with correct acl \n check permissions \n manifest filename: '" + manifestBucket + manifestKey + "'");
-			String errorMessage = "Error: S3 write '" + e.toString() + "', '" + e.getMessage() + "', file name = '" + outputFile.bucket + "/" + outputFile.path + "/" + outputFile.fileName + "'";
+			String errorMessage = "Error: S3 write '" + e.toString() + "', '" + e.getMessage() + "', file name = '" + fullPath + "'";
 			this.logger.log(errorMessage);
 			System.err.println(errorMessage);
 			e.printStackTrace();
 		}
 		
-		logger.log("Write manifest, file name = '" + outputFile.bucket + "/" + outputFile.path + "/" + outputFile.fileName + "' => result = " + result);
+		logger.log("Write manifest, file name = '" + fullPath + "' => result = " + result);
 		return result;
 	}
 

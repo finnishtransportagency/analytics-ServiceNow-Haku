@@ -24,6 +24,7 @@ export class ServerlessServiceStack extends cdk.Stack {
     var env = this.stackName.split("-").slice(-1)[0]
 
     var secretName = appname + "-API-" + env
+    // "ServiceNowAPIdev" => ServiceNowAPIdev98FDFBFE-YECe7Myy38jY
     const secret = new secretsmanager.Secret(this, secretName,
       { //DO NOT change this object, it will create new blank secretmanager 
         generateSecretString: {
@@ -39,6 +40,7 @@ export class ServerlessServiceStack extends cdk.Stack {
 
     var dataBucketName = "data" // appname.toLowerCase() + "-" + env.toLowerCase() + "-data"
     // alkuperäinen: 'data' + this.stackName
+    // "data" => servicenow-dev-servicenow-service-de-data7e2128ca-v9oj09v2vhpu
     const dataBucket = new s3.Bucket(this, dataBucketName, {
       removalPolicy: cdk.RemovalPolicy.DESTROY
     });
@@ -106,6 +108,7 @@ function datapipeServiceNowTable(
 
   var resourcename = appname + "-" + env + "-" + sourcename
 
+  // "incident" => ServiceNow-dev-ServiceNow-service-incident9FEF7035-rwPSYYliuOvt
   const apiLambda = new lambda.Function(construct, sourcename, {
     code: lambda.Code.fromAsset
       ("./lambda/servicenow/ServiceNowDataToS3/",
@@ -149,7 +152,7 @@ function datapipeServiceNowTable(
     schedule: Schedule.expression("cron(15 3 * * ? *)"),
       targets: [new LambdaFunction(apiLambda)], 
   });
-  
+
   cdk.Tags.of(output_bucket).add("APIFetch", sourcename)
   cdk.Tags.of(apiLambda).add("APIFetch", sourcename)
   cdk.Tags.of(rule).add("APIFetch", sourcename)
