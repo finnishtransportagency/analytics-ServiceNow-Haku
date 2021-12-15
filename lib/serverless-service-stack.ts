@@ -1,6 +1,6 @@
 import * as cdk from '@aws-cdk/core';
 import * as iam from '@aws-cdk/aws-iam';
-import { CfnOutput, Construct, DockerImage, RemovalPolicy, StackProps, Stage, Tag } from '@aws-cdk/core';
+import { CfnOutput, Construct, DockerImage, RemovalPolicy, Resource, StackProps, Stage, Tag } from '@aws-cdk/core';
 import s3 = require('@aws-cdk/aws-s3');
 import * as lambda from '@aws-cdk/aws-lambda';
 import { LambdaFunction } from '@aws-cdk/aws-events-targets';
@@ -18,12 +18,13 @@ export class ServerlessServiceStack extends cdk.Stack {
       { mutable: true },
     );
 
-
+    // Vain nimi, ensimmäinen osa
     var appname = this.stackName.split("-").slice(0)[0]
+    // Vain env, viimeinen osa
     var env = this.stackName.split("-").slice(-1)[0]
 
-    const secret = new secretsmanager.Secret(this, 
-      appname + "API" + env,
+    var secretName = appname + "-API-" + env
+    const secret = new secretsmanager.Secret(this, secretName,
       { //DO NOT change this object, it will create new blank secretmanager 
         generateSecretString: {
           secretStringTemplate: '{"username": "api username", "url": "api url"}',
@@ -36,7 +37,9 @@ export class ServerlessServiceStack extends cdk.Stack {
     //remember to add username,password,url hints to secretmanager so lambda can fetch them
     
 
-    const landingBucket = new s3.Bucket(this, 'data' + this.stackName, {
+    var dataBucketName = appname.toLowerCase + "-" + env.toLowerCase + "-data"
+    // alkuperäinen: 'data' + this.stackName
+    const dataBucket = new s3.Bucket(this, dataBucketName, {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
@@ -45,74 +48,54 @@ export class ServerlessServiceStack extends cdk.Stack {
     Replicate this for more lambda+bucket+crontrigger tasks sets and set secrets to secrets manager
     */
 	
-	  // Lambdan nimeksi tulee "ServiceNowdev-deploy-Serv-APIFetchnowtabletaskServ-s4WUIIwyHRxU"
-	  // => Selkeä taulun/lähteen nimi puuttuu.
-	  // Nimeksi pitäisi riittää:
-	  // "ServiceNow-" + <dev|prod> + "-APIFetch-" + <sourceName> + "-" + <generated id>
-	  // Sourcename pitää olla lähdettä kuvaava ja pitäisi olla vain yksi / lähde.
-	  // Ei tosin haittaa vaikka perään laittaa generoidun tunnisteen
+
+    // Incident lambda
     datapipeServiceNowTable(
       this,						// construct
-      "incident",		// APIName ==>> /_ merkit näyttää häviävän nimestä
-      appname,			// stackname = appName-environmentName
-      env,
-      secret,	            // secret name
-      this.region,				// region that is beign used      
+      "incident",		// source name
+      appname,			// appname == "ServiceNow"
+      env,          // env == dev|test|qa|prod
+      secret,	            // secret 
+      this.region,				// region that is beign used
       lambdaRole,				  // role that allows cross region bucket put
-      "com.cgi.lambda.apifetch.LambdaFunctionHandler", //handler used in code 
+      "com.cgi.lambda.apifetch.LambdaFunctionHandler", //handler used in code
       "mvn clean install && cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/", //buildcommand
       "",		// Fill in query_string_default query string used to get data from API
       "",		// Fill in query_string_date date modifier if we want exact date
+      dataBucket,  // Fill in databucket
       "servicenow2_u_case",		// Fill in s3 output_path
-      "servicenow2_u_case",		// Fill in output_filename 
-      "file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
+      "servicenow2_u_case",		// Fill in output_filename
+      dataBucket.bucketName,  //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
       "manifest/servicenow2_u_case",		// Fill in manifest_path,
       acl,		// ACL value for xaccount bucket write
-      "true",	// coordinatetransformtoWgs84      
+      "true",	// coordinatetransformtoWgs84
     )
 
-    /*
-    datapipeServiceNowTable(
-      this,						// construct
-      "services",		// APIName ==>> / merkit näyttää häviävän nimestä
-      this.stackName,			// stackname = appName-environmentName
-      secretmanagerForSecrets,	// secretmanager for storing secrets
-      this.region,				// region that is beign used      
-      lambdaRole,				// role that allows cross region bucket put
-      "com.cgi.lambda.apifetch.LambdaFunctionHandler", //handler used in code 
-      "mvn clean install && cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/", //buildcommand
-      "",		// Fill in query_string_default query string used to get data from API
-      "",		// Fill in query_string_date date modifier if we want exact date
-      "servicenow2_services",		// Fill in output_path
-      "servicenow2_services",		// Fill in output_filename 
-      "",		// Fill in manifestbucket_name
-      acl,		// ACL value for xaccount bucket write
-      "",		// Fill in manifest_path,
-      "true",	// coordinatetransformtoWgs84      
-    )
-    */
+    // services lambda
+
 
   }
 }
 
 function datapipeServiceNowTable(
   construct: cdk.Construct,
-  APIName: string,
+  sourcename: string,
   appname: string,
   env: string,
-  secretmanager: secretsmanager.Secret,
+  secret: secretsmanager.Secret,
   region: string,
   lambdaRole: iam.IRole,
   handler: string,
   buildcommand: string,
-  query_string_default:string,
-  query_string_date:string,
-  output_path:string,
-  output_filename:string,
-  manifestbucket_name:string,
-  manifest_path:string,
-  aclValue:string,
-  ctransform:string) {
+  query_string_default: string,
+  query_string_date: string,
+  output_bucket: s3.Bucket,
+  output_path: string,
+  output_filename: string,
+  manifest_bucket: string,
+  manifest_path: string,
+  aclValue: string,
+  ctransform: string) {
 
 /*
   const resourcenaming = "-" + APIName + "-" + appnameAndEnv
@@ -120,8 +103,10 @@ function datapipeServiceNowTable(
     removalPolicy: cdk.RemovalPolicy.DESTROY,
   });
 */
-/*  
-  const apiLambda = new lambda.Function(construct, 'APIFetch' + resourcenaming, {
+
+  var resourcename = appname + "-" + env
+
+  const apiLambda = new lambda.Function(construct, resourcename + "-" + sourcename, {
     code: lambda.Code.fromAsset
       ("./lambda/servicenow/ServiceNowDataToS3/",
         {
@@ -139,16 +124,16 @@ function datapipeServiceNowTable(
     handler: handler,
     runtime: lambda.Runtime.JAVA_8,
     environment: {
-      "secret_arn": secretmanager.secretArn,
+      "secret_arn": secret.secretArn,
       "region": region,
       "query_string_default": query_string_default,
       "query_string_date": query_string_date,
       "output_split_limit": "1500",
       "api_limit": "1000",
-      "output_bucket": databucket.bucketName,
+      "output_bucket": output_bucket.bucketName,
       "output_path": output_path,
       "output_filename": output_filename,
-      "manifest_bucket": manifestbucket_name,
+      "manifest_bucket": manifest_bucket,
       "manifest_path":manifest_path,
       "manifest_arn":aclValue,
       "coordinate_transform": ctransform,
@@ -157,19 +142,17 @@ function datapipeServiceNowTable(
     role: lambdaRole
   });
   
-  //console.log("function name = '" + apiLambda.functionName + "'")
-  
-  secretmanager.grantRead(apiLambda)
-  databucket.grantPut(apiLambda)
+  secret.grantRead(apiLambda)
+  output_bucket.grantPut(apiLambda)
 
-  const rule = new Rule(construct, "dailyRun" + resourcenaming, {
+  const rule = new Rule(construct, "dailyRun-" + resourcename, {
     schedule: Schedule.expression("cron(15 3 * * ? *)"),
       targets: [new LambdaFunction(apiLambda)], 
   });
-  cdk.Tags.of(databucket).add("APIFetch", APIName)
-  cdk.Tags.of(apiLambda).add("APIFetch", APIName)
-  cdk.Tags.of(rule).add("APIFetch", APIName)
-*/
+  cdk.Tags.of(output_bucket).add("APIFetch", sourcename)
+  cdk.Tags.of(apiLambda).add("APIFetch", sourcename)
+  cdk.Tags.of(rule).add("APIFetch", sourcename)
+
 
 }
 //stepfunction (optional, nice to have to loop through dates)
