@@ -8,20 +8,24 @@ import { ServerlessServiceStack } from './serverless-service-stack';
 interface stageprops extends StageProps {
   appname:string
 }
+
 class ApplicationStageDev extends Stage {
   constructor(scope: Construct, id: string, props: stageprops) {
     super(scope, id, props);
     new ServerlessServiceStack(this, props.appname+'-service-'+"dev",{ env:props.env });
   }
 }
+
 class ApplicationStageProd extends Stage {
   constructor(scope: Construct, id: string, props: stageprops) {
     super(scope, id, props);
     new ServerlessServiceStack(this, props.appname+'-service-'+"prod",{ env:props.env });
   }
 }
+
 interface ServiceStackProps extends cdk.StackProps {
 }
+
 export class CICDStack extends Stack {
   constructor(scope: Construct, id: string, props: ServiceStackProps) {
     super(scope, id, props);
@@ -42,16 +46,19 @@ export class CICDStack extends Stack {
     });
   
 
-    const deployStage = pipeline.addStage( new ApplicationStageDev(this, appname+"-dev-deploy", {
+    const deployStage = pipeline.addStage( new ApplicationStageDev(this, appname+"-dev",
+    {
       env: { account: this.account, region: this.region }, 
       appname:appname
     },
-    )); 
+    ));
+/*    
     const proddeployStage = pipeline.addStage(new ApplicationStageProd(this, appname+"-prod-deploy", {
       env: { account: this.account, region: this.region },
       appname:appname    
     }));
     proddeployStage.addPre(new ManualApprovalStep('Pre-production check'))    
-   
+  */
+
   }
   }
