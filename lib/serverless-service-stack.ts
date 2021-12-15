@@ -35,11 +35,10 @@ export class ServerlessServiceStack extends cdk.Stack {
     secret.applyRemovalPolicy(RemovalPolicy.RETAIN)
     //remember to add username,password,url hints to secretmanager so lambda can fetch them
     
-    /*
+
     const landingBucket = new s3.Bucket(this, 'data' + this.stackName, {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
-    */
 
     var acl = this.node.tryGetContext('ADE'+env+'ACL')
     /*
