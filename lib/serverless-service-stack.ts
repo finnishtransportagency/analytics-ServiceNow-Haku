@@ -41,7 +41,7 @@ export class ServerlessServiceStack extends cdk.Stack {
     
 
     // HUOM: riittää 1 bucket/env ==>> servicenow-apifetch-dev-data
-    var dataBucketName = appname.toLowerCase() + "-apifetch-" + env.toLowerCase() + "-data"
+    var dataBucketName = appname.toLowerCase() + "-apifetch-data-" + env.toLowerCase()
     // alkuperäinen: 'data' + this.stackName
     // "data" => servicenow-dev-servicenow-service-de-data7e2128ca-v9oj09v2vhpu
     const dataBucket = new s3.Bucket(this, dataBucketName, {
