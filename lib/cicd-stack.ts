@@ -29,7 +29,7 @@ interface ServiceStackProps extends cdk.StackProps {
 export class CICDStack extends Stack {
   constructor(scope: Construct, id: string, props: ServiceStackProps) {
     super(scope, id, props);
-    const appname = this.node.tryGetContext('appname')  
+    const appname = this.node.tryGetContext('appname')
     const sourceArtifact = new codepipeline.Artifact();
     const cloudAssemblyArtifact = new codepipeline.Artifact();
     var branch = "master"
@@ -40,24 +40,24 @@ export class CICDStack extends Stack {
       pipelineName: appname+'-Pipeline',
       synth:  new ShellStep('Synth', {
         input: CodePipelineSource.connection(this.node.tryGetContext('ownerandapp'), branch, {
-          connectionArn:  `arn:aws:codestar-connections:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:connection/${this.node.tryGetContext('connectionID')}`}),          
-        commands: ['npm ci', 'npm run build', 'npx cdk synth'],            
+          connectionArn:  `arn:aws:codestar-connections:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:connection/${this.node.tryGetContext('connectionID')}`}),
+        commands: ['npm ci', 'npm run build', 'npx cdk synth'],
       }),
     });
   
 
     const deployStage = pipeline.addStage( new ApplicationStageDev(this, appname+"-dev",
     {
-      env: { account: this.account, region: this.region }, 
+      env: { account: this.account, region: this.region },
       appname:appname
     },
     ));
 
     const proddeployStage = pipeline.addStage(new ApplicationStageProd(this, appname+"-prod-deploy", {
       env: { account: this.account, region: this.region },
-      appname:appname    
+      appname:appname
     }));
-    proddeployStage.addPre(new ManualApprovalStep('Pre-production check'))    
+    proddeployStage.addPre(new ManualApprovalStep('Pre-production check'))
 
     
   }
