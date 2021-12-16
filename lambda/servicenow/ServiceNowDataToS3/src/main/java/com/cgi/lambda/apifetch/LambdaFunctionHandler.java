@@ -184,7 +184,10 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 		
 		api.setManifestCreator(manifestCreator);
 		
-		api.process(startDate, endDate);
+		boolean result = api.process(startDate, endDate);
+		if (!result) {
+			System.exit(1);
+		}
 		
 		return "";
 	}

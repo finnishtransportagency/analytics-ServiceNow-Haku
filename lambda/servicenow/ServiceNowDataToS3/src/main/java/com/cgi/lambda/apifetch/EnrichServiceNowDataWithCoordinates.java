@@ -53,10 +53,10 @@ public class EnrichServiceNowDataWithCoordinates {
 	 * @return string with added WGS84-x and WGS84-y for the object
 	 */
 
-	public String enrichData() {
+	public void enrichData() {
 		JSONObject records = new JSONObject(data);
 		JSONArray rec = new JSONArray();
-		JSONArray jsonArray=records.getJSONArray("result");
+		JSONArray jsonArray = records.getJSONArray("result");
 		//JSONObject records = new JSONObject(data);
 		//JSONArray jsonArray = new JSONArray(data);
 		ProjCoordinate sourceCP = new ProjCoordinate();
@@ -66,12 +66,10 @@ public class EnrichServiceNowDataWithCoordinates {
 
 		for (int i = 0; i < size; i++) 
 		{
-			//String number = "";
 			JSONObject obj = (JSONObject) jsonArray.get(i);
 			try {
 				sourceCP.x = obj.getDouble("u_x_coordinate");
 				sourceCP.y = obj.getDouble("u_y_coordinate");
-				//number = obj.getString("number");
 				this.transformer.transform(sourceCP, targetCP);
 				obj.put("WGS84-x", targetCP.x);
 				obj.put("WGS84-y", targetCP.y);
@@ -90,11 +88,11 @@ public class EnrichServiceNowDataWithCoordinates {
 			}
 		}
 		if (!rec.isEmpty()) {
-		JSONObject saveobj = new JSONObject();
-		saveobj.put("records", rec);
-		this.enrichedList.add(saveobj);
+			JSONObject saveobj = new JSONObject();
+			saveobj.put("records", rec);
+			this.enrichedList.add(saveobj);
 		}
-		return this.enrichedList.get(0).toString();
+		//return this.enrichedList.get(0).toString();
 	}
 
 }

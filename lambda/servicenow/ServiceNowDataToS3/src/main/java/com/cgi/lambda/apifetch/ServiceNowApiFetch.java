@@ -107,7 +107,7 @@ public class ServiceNowApiFetch {
 	public boolean process(DateTime startDate, DateTime endDate) {
 
 		String data = null;
-		String newJsonString = null;
+		
 		try {
 			// Eri kutsu jos haetaan vakio eilinen tai päivämäärällä (tai välillä) 
 			if ((startDate != null) && (endDate != null)) {
@@ -122,10 +122,10 @@ public class ServiceNowApiFetch {
 			// muutettu IOException => Exception
 			this.logger.log(this.alertString + " Fatal error: Failed to download data: '" + e.toString() + "', '" + e.getMessage() + "'");
 			e.printStackTrace();
-			data = null;
+			// Hakuvirhe, poistutaan
+			return false;
 		}
 
-		// Hakuvirhe, poistutaan
 		if (data == null) return false;
 
 		// Save data into S3
@@ -134,11 +134,11 @@ public class ServiceNowApiFetch {
 
 			if (coordinateTransform) {
 				EnrichServiceNowDataWithCoordinates enrichmentCenter = null;
-
+				
 				try {
 					// 3067 =ETRS89 / ETRS-TM35FIN, converts to 4326=wgs84
 					enrichmentCenter = new EnrichServiceNowDataWithCoordinates(data, "EPSG:3067", this.outputSplitLimit);
-					newJsonString = enrichmentCenter.enrichData();
+					enrichmentCenter.enrichData();
 				} catch (Exception e) {
 					this.logger.log("Error: Coordinate transform failed: '" + e.toString() + "', '" + e.getMessage() + "'");
 					StringWriter sw = new StringWriter();
@@ -146,29 +146,35 @@ public class ServiceNowApiFetch {
 					e.printStackTrace(pw);
 					String sStackTrace = sw.toString(); // stack trace as a string
 					this.logger.log("Error: Coordinate transform failed: " + sStackTrace);
+					// Koordinaattimuunnosvirhe, poistutaan
+					return false;
 				}
 
 				// adds wgs84 coordinates
 				if ((enrichmentCenter == null) || enrichmentCenter.enrichedList.isEmpty()) {
 					this.logger.log("Error: Empty dataset after coordinate transform");
+					// Koordinaattimuunnosvirhe, poistutaan
 					return false;
+				/*
 				} else if (enrichmentCenter.enrichedList.size() == 1) {
 					this.logger.log("Write transformed output start");
 					FileSpec outputFile = writer.makeDataFileName(this.sourceName);
-					if(writer.writeDataFile(outputFile, newJsonString)) {
+					if(writer.writeDataFile(outputFile, dataAndCoordinates)) {
 						if (this.manifestCreator != null) {
 							this.manifestCreator.createManifest(outputFile);
 						}
 					}
 					this.logger.log("Write transformed output end");
-				} else { // loop through array
+				*/
+				} else { // loop through result array
 					this.logger.log("Write transformed output start");
 					int size = enrichmentCenter.enrichedList.size();
 					for (int i = 0; i < size; i++) {
 						FileSpec outputFile = writer.makeDataFileName(this.sourceName);
 						if (writer.writeDataFile(outputFile, enrichmentCenter.enrichedList.get(i).toString())) {
 							if (this.manifestCreator != null) {
-								this.manifestCreator.createManifest(outputFile);
+								boolean result = this.manifestCreator.createManifest(outputFile);
+								if (!result) return false;
 							}
 						}
 					}
@@ -180,7 +186,8 @@ public class ServiceNowApiFetch {
 				FileSpec outputFile = writer.makeDataFileName(this.sourceName);
 				if (writer.writeDataFile(outputFile, data)) {
 					if (this.manifestCreator != null) {
-						this.manifestCreator.createManifest(outputFile);
+						boolean result = this.manifestCreator.createManifest(outputFile);
+						if (!result) return false;
 					}
 				}
 				this.logger.log("Write output end");
@@ -224,7 +231,7 @@ public class ServiceNowApiFetch {
 			this.log("Fetch data for date range '" + (startDate != null ? startDate.toString("yyyy-MM-dd") : "null") + "' -> '" + (endDate != null ? endDate.toString("yyyy-MM-dd") : "null") + " failed: '" + e.toString() + "', '" + e.getMessage() + "'");
 		}
 		// Some error: return empty data
-		return "";
+		return null;
 	}
 	
 	
@@ -340,7 +347,7 @@ public class ServiceNowApiFetch {
 			System.err.println("Fatal error: Failed to download data");
 			e.printStackTrace();
 			this.log("## fetch error: '" + e.toString() + "', '" + e.getMessage() + "'");
-			data = "";
+			data = null;
 		}
 		
 		long endts = System.currentTimeMillis();
