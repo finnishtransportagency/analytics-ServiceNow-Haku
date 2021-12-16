@@ -49,8 +49,8 @@ public class TestServiceNowApiFetch implements SimpleLogger, SimpleWriter {
 		Integer outputSplitLimit = Integer.valueOf(200);
 		boolean coordinateTransform = true;
 		
-		String startDateStr = "2021-10-29";
-		String endDateStr = "2021-10-29";
+		DateTime startDate = new DateTime("2021-10-29").withTime(0, 0, 0, 0);
+		DateTime endDate = new DateTime("2021-10-29").withTime(0, 0, 0, 0);
 
 
 		String template = "{\"entries\":[],\"columns\":[\"DATA\"]}";
@@ -63,7 +63,7 @@ public class TestServiceNowApiFetch implements SimpleLogger, SimpleWriter {
 				queryStringDefault, queryStringDate, argOffset, argLimit, increment, outputSplitLimit, coordinateTransform,
 				sourceName);
 		api.setManifestCreator(mfc);
-		api.process(startDateStr, endDateStr);
+		api.process(startDate, endDate);
 
 	}
 	

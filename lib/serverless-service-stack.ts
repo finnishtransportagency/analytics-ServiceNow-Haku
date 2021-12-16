@@ -66,8 +66,8 @@ export class ServerlessServiceStack extends cdk.Stack {
       lambdaRole,				  // role that allows cross region bucket put
       "com.cgi.lambda.apifetch.LambdaFunctionHandler", //handler used in code
       "mvn clean install && cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/", //buildcommand
-      "",		// Fill in query_string_default query string used to get data from API
-      "",		// Fill in query_string_date date modifier if we want exact date
+      "task?sysparm_query=sys_class_name%3Dsn_customerservice_casesys_updated_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()%5EORsys_created_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()&sysparm_display_value=true",		// Fill in query_string_default query string used to get data from API
+      "task?sysparm_query=sys_class_name%3Dsn_customerservice_case%5Esys_created_onON{DATEFILTER}@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27start%27)@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27end%27)&sysparm_display_value=true",		// Fill in query_string_date date modifier if we want exact date
       dataBucket,  // Fill in databucket
       "servicenow2_u_case",		// Fill in s3 output_path
       "servicenow2_u_case",		// Fill in output_filename
@@ -76,6 +76,9 @@ export class ServerlessServiceStack extends cdk.Stack {
       acl,		// ACL value for xaccount bucket write
       "true"	// coordinatetransformtoWgs84
     )
+
+
+
 
 
     // Services lambda
@@ -89,7 +92,7 @@ export class ServerlessServiceStack extends cdk.Stack {
       lambdaRole,				  // role that allows cross region bucket put
       "com.cgi.lambda.apifetch.LambdaFunctionHandler", //handler used in code
       "mvn clean install && cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/", //buildcommand
-      "",		// Fill in query_string_default query string used to get data from API
+      "cmdb_ci_service?sysparm_query=service_classification%3DService&sysparm_display_value=true",		// Fill in query_string_default query string used to get data from API
       "",		// Fill in query_string_date date modifier if we want exact date
       dataBucket,  // Fill in databucket
       "servicenow_cmdb_ci_service",		// Fill in s3 output_path

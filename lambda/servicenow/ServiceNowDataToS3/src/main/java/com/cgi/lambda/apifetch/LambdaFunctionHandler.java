@@ -31,11 +31,8 @@ import org.joda.time.DateTime;
 
 public class LambdaFunctionHandler implements RequestHandler<Map<String,String>, String>, SimpleWriter {
 
-	// Use environmental variables in AWS Lambda to set values of these
-
-	//queryStringDefault = "sysparm_query=sys_class_name%3Dsn_customerservice_casesys_updated_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()%5EORsys_created_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()&sysparm_display_value=true";
-	//queryStringDate    = "sysparm_query=sys_class_name%3Dsn_customerservice_case%5Esys_created_onON{DATEFILTER}@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27start%27)@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27end%27)&sysparm_display_value=true";
-
+	// Vakiot joita ei tarvitse muuttaa asetetaan jo täällä. Loput handlerissa
+	
 	private String argOffset = "&sysparm_offset=";
 	private String argLimit = "&sysparm_limit=";
 	private Integer DEFAULT_INCREMENT = Integer.valueOf(1000);
@@ -49,9 +46,7 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 	private String manifestPath = null;
 	private String manifestArn = null;
 	private String manifestTemplate = "{\"entries\":[],\"columns\":[\"DATA\"]}";
-	
-	
-	
+
 	private String charset = "UTF-8";
 
 	private Context context;
@@ -69,24 +64,28 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 		this.context = context;
 		this.logger = new SimpleLambdaLogger(this.context);
 
-		
+		// TUnnukset- secret
 		String secretArn = System.getenv("secret_arn");
 		this.region = System.getenv("region");
 
+		// API vaatimukset
 		String queryStringDefault = System.getenv("query_string_default");
 		String queryStringDate = System.getenv("query_string_date");
 		
 		String inOutputSplitLimit = System.getenv("output_split_limit");
 		String inIncrement = System.getenv("api_limit");
 
+		// Kohde
 		this.outputBucket = System.getenv("output_bucket");
 		this.outputPath = System.getenv("output_path");
 		this.outputFileName = System.getenv("output_filename");
-		
+
+		// Manifest
 		this.manifestBucket = System.getenv("manifest_bucket"); 
 		this.manifestPath = System.getenv("manifest_path"); 
 		this.manifestArn = System.getenv("manifest_arn");
-		
+
+		// Koordinaattimuunnos
 		String inCoordinateTransform = System.getenv("coordinate_transform");
 		boolean coordinateTransform = inCoordinateTransform.trim().equalsIgnoreCase("true") ? true : false; 
 
@@ -96,7 +95,7 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 		String password = null;
 		String url = null;
 		
-
+		// Tunnusten ja url haku
 		try {
 			SecretsManagerClient secretsClient = SecretsManagerClient.builder().region(Region.of(this.region)).build();
 			GetSecretValueRequest valueRequest = GetSecretValueRequest.builder().secretId(secretArn).build();
@@ -107,7 +106,9 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 			username = sj.getString("username");
 			password = sj.getString("password");
 			url = sj.getString("url");
-			
+			if (!url.endsWith("/")) {
+				url += "/";
+			}
 			secretsClient.close();
 			
 		} catch (Exception e) {
@@ -115,9 +116,9 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 			return "";
 		}
 		
-		
+
+		// Päivämäärä- inputit
 		this.logger.log("Input: " + input);
-		// Isto Saarinen 2021-12-01: lisätty valinnaiset päivämäärä- inputit
 		String datein = getDate(input, "date");
 		this.logger.log("input date:  '" + datein + "'\n");
 		String startdatein = getDate(input, "startdate");
@@ -125,31 +126,29 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 		String enddatein = getDate(input, "enddate");
 		this.logger.log("input enddate:  '" + enddatein + "'\n");
 
-		String startDateStr = null;
-		String endDateStr = null;
+		DateTime startDate = null;
+		DateTime endDate = null;
 		
-		// Isto Saarinen 2021-12-01: päivämäärä- inputit
 		if (!datein.isEmpty()) {
-			 // Annettu date: se yliajaa startdate/enddate
-			startDateStr = datein;
-			endDateStr = datein;
+			startDate = new DateTime(datein).withTime(0, 0, 0, 0);
+			endDate = startDate;
 		} else {
 			if (!startdatein.isEmpty()) {
 				// Annettu startdate
-				startDateStr = startdatein;
+				startDate = new DateTime(startdatein).withTime(0, 0, 0, 0);
 				if (!enddatein.isEmpty()) {
-					// Annettu enddate
-					endDateStr = enddatein;
+					// Annettu enddate, käytetään sitä
+					endDate = new DateTime(enddatein).withTime(0, 0, 0, 0);
 				} else {
-					// Vain startdate => ajetaan kuluvaan päivään asti
-					endDateStr = new DateTime().toString("yyyy-MM-dd");
+					// Vain startdate => ajetaan vain startdate päivälle
+					endDate = startDate;
 				}
 			}
 		}
 
-		// Isto Saarinen 2021-12-01: output prefix varmistus
 		if (!this.outputPath.endsWith("/")) this.outputPath += "/";
 
+		// API increment
 		Integer increment = null;
 		try {
 			increment = Integer.parseInt(inIncrement);
@@ -158,6 +157,7 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 			increment = this.DEFAULT_INCREMENT;
 		}
 		
+		// API limit
 		Integer outputSplitLimit = null;
 		try {
 			outputSplitLimit = Integer.parseInt(inOutputSplitLimit);
@@ -168,8 +168,7 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 
 		ManifestCreator manifestCreator = null;
 
-		// HUOM: template voi olla vakio
-		//String template = this.readManifestTemplate();
+		// HUOM: template on vakio koska taulusta riippumatta vain tallennetaan json eiklä parsita täällä
 		if (!this.manifestArn.isEmpty() && !this.manifestBucket.isEmpty() && !this.manifestPath.isEmpty()) {
 			manifestCreator = new ManifestCreator(this.logger, this);
 			manifestCreator.setTemplate(manifestTemplate);
@@ -177,14 +176,18 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 		} else {
 			this.logger.log("Manifest resources are not defined. Do not generate manifest(s).");
 		}
-		
+
+		// ServiceNow api prosessointi
 		ServiceNowApiFetch api = new ServiceNowApiFetch(this.logger, this, username, password, url,
 				queryStringDefault, queryStringDate, this.argOffset, this.argLimit, increment, outputSplitLimit,
 				coordinateTransform, this.outputFileName);
 		
 		api.setManifestCreator(manifestCreator);
 		
-		api.process(startDateStr, endDateStr);
+		boolean result = api.process(startDate, endDate);
+		if (!result) {
+			System.exit(1);
+		}
 		
 		return "";
 	}
@@ -195,7 +198,7 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 	
 	
 	/**
-	 * Uusi parametrien haku nimen mukaan
+	 * Parametrien haku nimen mukaan
 	 * 
 	 * @author Isto Saarinen 2021-12-16
 	 * 
@@ -205,11 +208,12 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 	 */
 	protected String getDate(Map<String,String> input, String name) {
 		if (input == null) return "";
-//		JSONObject o = new JSONObject(input.toString().trim());
 		try {
-//			String s = o.getString(name);
-			String s = input.get(name);
-			return s.trim();
+			if (input.containsKey(name)) {
+				String s = input.get(name);
+				return s.trim();
+			}
+			return "";
 		} catch (Exception e) {
 		}
 		return "";
@@ -220,8 +224,9 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 	
 	
     /**
-	 * Checks if file name is in fullscan list list is constructed so that __ separates files from environmentalvariable set in lambda
+	 * Check if file name is in fullscan list list is constructed so that __ separates files from environmentalvariable set in lambda
 	 * Sets fullscanned parameter to true if current file being copied is in the list of fullscan enabled list
+	 *
 	 * @param sourceName with out .csv that of the file that is being manifested and copied for usage of ADE
 	 * @return
 	 */
@@ -263,10 +268,15 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 
 	
 
+	/**
+	 * 
+	 * Datatiedoston kirjoitus.
+	 * 
+	 * 
+	 */
 	@Override
 	public boolean writeDataFile(FileSpec outputFile, String data) {
 		boolean result = false;
-
 
 		String path = outputFile.path;
 		if (!path.endsWith("/")) {
@@ -308,7 +318,12 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 
 
 
-
+	/**
+	 * 
+	 * Manifest- tiedoston kirjoitus
+	 * 
+	 * 
+	 */
 	@Override
 	public boolean writeManifestFile(FileSpec outputFile, String data) {
 		boolean result = false;
@@ -369,7 +384,11 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 	
 	
 
-
+	/**
+	 * 
+	 * Manifest- tiedoston nimen muodostus
+	 * 
+	 */
 	// s3://<manifestBucket>/<manifestPath>/manifest-table.<outputFileName>.<now>.batch.<now>.fullscanned.false.json.json
 	@Override
 	public FileSpec makeManifestFileName(FileSpec dataFile) {

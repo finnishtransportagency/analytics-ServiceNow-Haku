@@ -11,12 +11,9 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.joda.time.DateTime;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 
@@ -42,15 +39,10 @@ public class ServiceNowApiFetch {
 	private boolean coordinateTransform = false;
 	private String sourceName = null;
 	
-	private EnrichServiceNowDataWithCoordinates enrichmentCenter = null;
-	// regex for accepted or expected characters in Service Now json. most notably alphanumeric chars incl
-	// scandic letters, and chars used in json notation
-	//private static final String validchars = "[^a-öA-Ö0-9\\ \\t\\.\\,\\\"\\:\\;\\=\\?\\&\\!\\@\\*\\<\\>\\+\\%\\(\\)\\[\\]\\{\\}\\-\\_\\/\\\\\\']";
 
 	
 	
 	public ServiceNowApiFetch(SimpleLogger logger, SimpleWriter writer, String username, String password, String url, String queryStringDefault, String queryStringDate, String argOffset, String argLimit, Integer increment, Integer outputSplitLimit, boolean coordinateTransform, String sourceName) {
-		//this.context = context;
 		this.logger = logger;
 		this.writer = writer;
 		this.queryStringDefault = queryStringDefault;
@@ -67,7 +59,7 @@ public class ServiceNowApiFetch {
 		this.coordinateTransform = coordinateTransform;
 		this.sourceName = sourceName;
 	}
-	
+
 
 	public void setManifestCreator(ManifestCreator manifestCreator) {
 		this.manifestCreator = manifestCreator;
@@ -86,8 +78,15 @@ public class ServiceNowApiFetch {
 		public boolean status;		// Result status
 	}	
 	
-	
-	
+
+
+
+	/**
+	 * 
+	 * Paikallinen logger, vain null- tarkastus
+	 * 
+	 * @param s
+	 */
 	private void log(String s) {
 		if (this.logger != null) {
 			this.logger.log(s);
@@ -97,137 +96,111 @@ public class ServiceNowApiFetch {
 	
 	
 	
-	
-	public boolean process(String startDateStr, String endDateStr) {
+	/**
+	 * 
+	 * Hae data ja tee mahdollinen koordinaattimuunnos
+	 * 
+	 * @param startDateStr
+	 * @param endDateStr
+	 * @return
+	 */	
+	public boolean process(DateTime startDate, DateTime endDate) {
 
 		String data = null;
-		String newJsonString = null;
-		// Get data to be saved to S3
+		
 		try {
-			// Isto Saarinen 2021-12-01: Eri kutsu jos haetaan vakio eilinen tai päivämäärällä (tai välillä) 
-			//data = this.getData();
-			if ((startDateStr != null) && (endDateStr != null)) {
-				this.logger.log("Fetch data created between '" + startDateStr + "' - '" + endDateStr + "'");
-				data = this.fetchData(this.username, this.password, this.url, startDateStr, endDateStr);
+			// Eri kutsu jos haetaan vakio eilinen tai päivämäärällä (tai välillä) 
+			if ((startDate != null) && (endDate != null)) {
+				this.logger.log("Fetch data created between '" + startDate.toString("yyyy-MM-dd") + "' - '" + endDate.toString("yyyy-MM-dd") + "'");
+				data = this.fetchData(startDate, endDate);
 			} else {
 				this.logger.log("Fetch data created or updated yesterday");
-				data = this.fetchData(this.username, this.password, this.url);
+				data = this.fetchData();
 			}
 				
-			//this.logger.log("## raw data: " + data);
-			// TODO: check data for invalid characters
-			// HUOM: Ei toimi koska json voi sisältää kommentteja joissa mitä tahansa merkkejä (esim <url> tjsp.)
-			//this.validate(data);
 		} catch (Exception e) {
-			// Isto Saarinen 2021-12-01: muutettu IOException => Exception
-			this.logger.log("Fatal error: Failed to download data");
+			// muutettu IOException => Exception
+			this.logger.log(this.alertString + " Fatal error: Failed to download data: '" + e.toString() + "', '" + e.getMessage() + "'");
 			e.printStackTrace();
+			// Hakuvirhe, poistutaan
+			return false;
 		}
+
+		if (data == null) return false;
 
 		// Save data into S3
 
 		if (!data.isEmpty()) {
 
 			if (coordinateTransform) {
+				EnrichServiceNowDataWithCoordinates enrichmentCenter = null;
+				
 				try {
 					// 3067 =ETRS89 / ETRS-TM35FIN, converts to 4326=wgs84
-					this.enrichmentCenter = new EnrichServiceNowDataWithCoordinates(data, "EPSG:3067", this.outputSplitLimit);
-					newJsonString = this.enrichmentCenter.enrichData();
+					enrichmentCenter = new EnrichServiceNowDataWithCoordinates(data, "EPSG:3067", this.outputSplitLimit);
+					enrichmentCenter.enrichData();
 				} catch (Exception e) {
-					this.logger.log("Error: Could not add WGS84 coordinates to data or split limit not integer");
-					this.logger.log("Error: WGS data: " + data.length());
+					this.logger.log("Error: Coordinate transform failed: '" + e.toString() + "', '" + e.getMessage() + "'");
 					StringWriter sw = new StringWriter();
 					PrintWriter pw = new PrintWriter(sw);
 					e.printStackTrace(pw);
 					String sStackTrace = sw.toString(); // stack trace as a string
-					this.logger.log("Error: : " + sStackTrace);
+					this.logger.log("Error: Coordinate transform failed: " + sStackTrace);
+					// Koordinaattimuunnosvirhe, poistutaan
+					return false;
 				}
 
 				// adds wgs84 coordinates
-				if ((this.enrichmentCenter == null) || this.enrichmentCenter.enrichedList.isEmpty()) {
-					this.logger.log("Error: Empty dataset");
+				if ((enrichmentCenter == null) || enrichmentCenter.enrichedList.isEmpty()) {
+					this.logger.log("Error: Empty dataset after coordinate transform");
+					// Koordinaattimuunnosvirhe, poistutaan
 					return false;
-				} else if (this.enrichmentCenter.enrichedList.size() == 1) {
-					this.logger.log("single array found");
+				/*
+				} else if (enrichmentCenter.enrichedList.size() == 1) {
+					this.logger.log("Write transformed output start");
 					FileSpec outputFile = writer.makeDataFileName(this.sourceName);
-					if(writer.writeDataFile(outputFile, newJsonString)) {
+					if(writer.writeDataFile(outputFile, dataAndCoordinates)) {
 						if (this.manifestCreator != null) {
 							this.manifestCreator.createManifest(outputFile);
 						}
 					}
-					this.logger.log("single array ended");
-				} else { // loop through array
-					this.logger.log("multiarray found");
-					int size = this.enrichmentCenter.enrichedList.size();
+					this.logger.log("Write transformed output end");
+				*/
+				} else { // loop through result array
+					this.logger.log("Write transformed output start");
+					int size = enrichmentCenter.enrichedList.size();
 					for (int i = 0; i < size; i++) {
 						FileSpec outputFile = writer.makeDataFileName(this.sourceName);
-						if (writer.writeDataFile(outputFile, this.enrichmentCenter.enrichedList.get(i).toString())) {
+						if (writer.writeDataFile(outputFile, enrichmentCenter.enrichedList.get(i).toString())) {
 							if (this.manifestCreator != null) {
-								this.manifestCreator.createManifest(outputFile);
+								boolean result = this.manifestCreator.createManifest(outputFile);
+								if (!result) return false;
 							}
 						}
 					}
-					this.logger.log("multiarray ended");
+					this.logger.log("Write transformed output end. Processed parts = " + size);
 				}
 
 			} else {
+				this.logger.log("Write output start");
 				FileSpec outputFile = writer.makeDataFileName(this.sourceName);
 				if (writer.writeDataFile(outputFile, data)) {
 					if (this.manifestCreator != null) {
-						this.manifestCreator.createManifest(outputFile);
+						boolean result = this.manifestCreator.createManifest(outputFile);
+						if (!result) return false;
 					}
 				}
-				this.logger.log("result written");
+				this.logger.log("Write output end");
 			}
 			
 		}
 		return true;
 	}
-	
-	
-	
-
-	
 
 
-	/**
-	 * 1. Tarkistaa, etta merkijono on jsonia
-	 * 2. Tarkistaa  etta sisaltaa vain sallittuja merkkeja
-	 * 
-	 * Datan latauksessa {@link #getData()} on jo koitettu tunnistaa alkuperainen merkisto
-	 * 
-	 * @param data, json merkkijono
-	 */
-	/*
-	private void validate(String data) {
-		// 1. Onko json
-		// todo: tuplatarkastus, eli json muunnokset myohemmassa vaiheessa ajavat saman asian, voi mahd. poistaa
-		// riippuen siita, halutaanko virhe havaita jo aiemmin ja keskitetysti
-		try {
-			new JSONObject(data);
-		} catch (JSONException e) {
-			try {
-				new JSONArray(data);
-			} catch (JSONException e2) {
-				System.out.println("## Service now tiedosto ei ollut JSON muotoa");
-				this.logger.log(this.alertString + "Service now tiedosto ei ollut JSON muotoa");
-			}
-		}
-		
-		// 2. Onko sisalto ok
-		try {
-			Pattern pattern = Pattern.compile(validchars);
-			Matcher matcher = pattern.matcher(data);
-			if(matcher.find()) {
-				String invalidchars = matcher.group();
-				this.logger.log(this.alertString + "JSON tiedostosta lyotyi odottamaton merkki: " + invalidchars);
-			}
-		} catch (Exception e) {
-			this.logger.log("## Virhe regex tarkistuksessa: " + e.getMessage());
-		}
-	}
-	*/
-	
+
+
+
 	/**
 	 * Datan haku päivämäärävälille (tai yhdelle päivälle jos annettu sama päivä)
 	 * 
@@ -237,11 +210,9 @@ public class ServiceNowApiFetch {
 	 * @param enddate		Loppupäivä ('yyyy-MM-dd')
 	 * @return JSON data
 	 */
-	public String fetchData(String username, String password, String url, String startdate, String enddate) {
+	public String fetchData(DateTime startDate, DateTime endDate) {
+		if ((startDate == null) || (endDate == null)) return "";
 		try {
-			// Muunnos String -> DateTime
-			DateTime startDate = new DateTime(startdate).withTime(0, 0, 0, 0);
-			DateTime endDate = new DateTime(enddate).withTime(0, 0, 0, 0);
 			DateTime processDate = startDate;
 			StringBuffer sb = new StringBuffer();
 			int counter = 1;
@@ -249,18 +220,18 @@ public class ServiceNowApiFetch {
 			while( processDate.getMillis() <= endDate.getMillis() ) {
 				this.log("Fetch data for date '" + processDate.toString("yyyy-MM-dd") + "'");
 				if (counter > 1) sb.append(",");
-				sb.append(this.fetchData(username, password, url, processDate.toString("yyyy-MM-dd")));
-				
+				sb.append(this.fetchData(processDate));
+
 				processDate = processDate.plusDays(1);
 				counter++;
 			}
-			// Lisätään listan ympärille result 
+			// Lisätään listan ympärille result objekti
 			return "{\"result\":[" + sb.toString() + "]}";
 		} catch (Exception e) {
-			// TODO: logging?
+			this.log("Fetch data for date range '" + (startDate != null ? startDate.toString("yyyy-MM-dd") : "null") + "' -> '" + (endDate != null ? endDate.toString("yyyy-MM-dd") : "null") + " failed: '" + e.toString() + "', '" + e.getMessage() + "'");
 		}
 		// Some error: return empty data
-		return "";
+		return null;
 	}
 	
 	
@@ -273,8 +244,8 @@ public class ServiceNowApiFetch {
 	 * 
 	 * @return JSON data
 	 */
-	public String fetchData(String username, String password, String url) {
-		return"{\"result\":[" + this.fetchData(username, password, url, null) + "]}"; 
+	public String fetchData() {
+		return"{\"result\":[" + this.fetchData(null) + "]}"; 
 	}
 	
 	
@@ -285,21 +256,23 @@ public class ServiceNowApiFetch {
 	 * 
 	 * @author Isto Saarinen 2021-12-01
 	 * 
-	 * @param date		Päivä ('yyyy-MM-dd')
+	 * @param processDate   Käsiteltävä päivä
 	 * @return JSON data
 	 */
-	public String fetchData(String username, String password, String url, String date) {
+	public String fetchData(DateTime processDate) {
 		long startts = System.currentTimeMillis();
 		List<Long> apicalls = new ArrayList<Long>();
 
 		String data = "";
 		int size = 0;
-		
+		String dateFilter = "";
+
 		String query = this.queryStringDefault;
 		
-		if (date != null) {
+		if (processDate != null) {
 			// Päivä annettu, kasataan hakuehto
-			query = this.queryStringDate.replace("{DATEFILTER}", date);
+			dateFilter = processDate.toString("yyyy-MM-dd");
+			query = this.queryStringDate.replace("{DATEFILTER}", dateFilter);
 		}
 		
 		try {
@@ -308,11 +281,13 @@ public class ServiceNowApiFetch {
 			// Yritetään aina ensin ilman rajoituksia
 			Integer offset = null;
 			Integer limit = null;
+
+			//String urlQuery = this.url + query;
 			
 			while(true) {
 				// Kutsu offset+limit (tai ilman 1. kerralla)
 				long startf = System.currentTimeMillis();
-				DataHolder piece = this.serviceNowApiCall(offset, limit, username, password, url, query);
+				DataHolder piece = this.serviceNowApiCall(offset, limit, query);
 				long endf = System.currentTimeMillis();
 				if (piece.recordCount < 1) {
 					// Ei tuloksia, lopetetaan
@@ -371,7 +346,8 @@ public class ServiceNowApiFetch {
 		} catch (Exception e) {
 			System.err.println("Fatal error: Failed to download data");
 			e.printStackTrace();
-			data = "";
+			this.log("## fetch error: '" + e.toString() + "', '" + e.getMessage() + "'");
+			data = null;
 		}
 		
 		long endts = System.currentTimeMillis();
@@ -385,7 +361,7 @@ public class ServiceNowApiFetch {
 			callsavg = callstotal / apicalls.size();
 		}
 		
-		this.log("## total records fetched for day '" + (date != null ? date : "yesterday") + "' = " + size + ", total time = " + (endts - startts) + " ms, total api fetch time = " + callstotal + " ms, average " + callsavg + " ms/fetch");
+		this.log("## total records fetched for day '" + (dateFilter != null ? dateFilter : "yesterday") + "' = " + size + ", total time = " + (endts - startts) + " ms, total api fetch time = " + callstotal + " ms, average " + callsavg + " ms/fetch");
 		
 		return data;
 	}
@@ -408,37 +384,35 @@ public class ServiceNowApiFetch {
 	 * @param format	API polku & vakioparametrit
 	 * @return JSON listan sisältö tapahtumista. Palautus ilman ympäröiviä []
 	 */
-	private DataHolder serviceNowApiCall(Integer offset, Integer limit, String username, String password, String url, String path) throws Exception {
+	private DataHolder serviceNowApiCall(Integer offset, Integer limit, String query) throws Exception {
 
 		long startts = System.currentTimeMillis();
 	
 		// Prepare login credentials and URL
-		String login = username + ":" + password;
-		String requestUrl = url + "?" + path;
+		String login = this.username + ":" + this.password;
+		//String requestUrl = url + "?" + path;
+		String url = this.url + query;
 		if ((offset != null) && (limit != null)) {
-			requestUrl += this.argOffset + offset + this.argLimit + limit;
+			url += this.argOffset + offset + this.argLimit + limit;
 		}
 
-		this.log("## make api call with url: " + requestUrl);
+		this.log("## make api call with url: " + url);
 		String base64Login = new String(Base64.getEncoder().encode(login.getBytes()));
 
 		// Open connection and read CSV
-		URL uurl = new URL(requestUrl);
+		URL uurl = new URL(url);
 		URLConnection uc = uurl.openConnection();
 		uc.setRequestProperty("Authorization", "Basic " + base64Login);
 		uc.setRequestProperty("Accept", "application/json");
 		
-		// Kaytetaan buffered ja tikainputstreameja, jotta mark ja reset toimii
-		// ja streami luetaan tunnistamiseen jalkeen taas alusta
-		InputStream inputstream = uc.getInputStream();
-		BufferedInputStream bufferedstream = new BufferedInputStream(inputstream);
-		StringBuffer sb = null;
+//		InputStream inputstream = uc.getInputStream();
+//		BufferedInputStream bufferedstream = new BufferedInputStream(inputstream);
+//		BufferedReader in = new BufferedReader(new InputStreamReader(bufferedstream, this.charset));
 
-		
-		// Start reading
-		BufferedReader in = new BufferedReader(new InputStreamReader(bufferedstream, this.charset));
+		// Start reading result
+		BufferedReader in = new BufferedReader(new InputStreamReader(new BufferedInputStream(uc.getInputStream()), this.charset));
 
-		sb = new StringBuffer();
+		StringBuffer sb = new StringBuffer();
 		String line;
 		while ((line = in.readLine()) != null) {
 			sb.append(line + "\n");
@@ -446,12 +420,14 @@ public class ServiceNowApiFetch {
 		in.close();
 		
 		String data = sb.toString();
+		sb = null;
 		
 		// Varmistus, loppuun tulee joskus ylimääräinen ',""'
 		if (data.endsWith("}],\"\"}")) {
 			data = data.replace("}],\"\"}", "}]}");
 		}
 		
+		// Palautettujen tulosten "rivimäärä"
 		JSONObject records = new JSONObject(data);
 		JSONArray results = records.getJSONArray("result");
 		int size = results.length();
@@ -482,7 +458,7 @@ public class ServiceNowApiFetch {
 		}
 		dh.data = t;
 		long endts = System.currentTimeMillis();
-		this.log("## api call '" + requestUrl + "' return status = " + dh.status + ", records = " + dh.recordCount + ", time = " + (endts - startts) + " ms");
+		this.log("## api call '" + url + "' return status = " + dh.status + ", records = " + dh.recordCount + ", time = " + (endts - startts) + " ms");
 		return dh;
 	}
 	
