@@ -1,6 +1,6 @@
 import * as cdk from '@aws-cdk/core';
 import * as iam from '@aws-cdk/aws-iam';
-import { CfnOutput, Construct, DockerImage, RemovalPolicy, Resource, StackProps, Stage, Tag } from '@aws-cdk/core';
+import { CfnOutput, Construct, DockerImage, Duration, RemovalPolicy, Resource, StackProps, Stage, Tag } from '@aws-cdk/core';
 import s3 = require('@aws-cdk/aws-s3');
 import * as lambda from '@aws-cdk/aws-lambda';
 import { LambdaFunction } from '@aws-cdk/aws-events-targets';
@@ -153,6 +153,8 @@ function datapipeServiceNowTable(
     functionName: functionName,
     handler: handler,
     runtime: lambda.Runtime.JAVA_8,
+    timeout: Duration.minutes(15),
+    memorySize: 2048,
     environment: {
       "secret_arn": secret.secretArn,
       "region": region,
