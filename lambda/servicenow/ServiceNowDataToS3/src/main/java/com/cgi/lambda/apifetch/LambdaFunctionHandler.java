@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
 import org.json.JSONObject;
 
@@ -28,19 +29,12 @@ import org.joda.time.DateTime;
 
 
 
-public class LambdaFunctionHandler implements RequestHandler<Object, String>, SimpleWriter {
+public class LambdaFunctionHandler implements RequestHandler<Map<String,String>, String>, SimpleWriter {
 
 	// Use environmental variables in AWS Lambda to set values of these
 
-	// Haetaan suoraan secrets- managerista user:pass
-	// System.getenv("secrets") 
-	
-	//private String username = null;
-	//private String password = null;
-	
 	//queryStringDefault = "sysparm_query=sys_class_name%3Dsn_customerservice_casesys_updated_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()%5EORsys_created_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()&sysparm_display_value=true";
 	//queryStringDate    = "sysparm_query=sys_class_name%3Dsn_customerservice_case%5Esys_created_onON{DATEFILTER}@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27start%27)@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27end%27)&sysparm_display_value=true";
-
 
 	private String argOffset = "&sysparm_offset=";
 	private String argLimit = "&sysparm_limit=";
@@ -56,8 +50,6 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 	private String manifestArn = null;
 	private String manifestTemplate = "{\"entries\":[],\"columns\":[\"DATA\"]}";
 	
-	//private String templateBucket = null;
-	//private String templatePath = null;
 	
 	
 	private String charset = "UTF-8";
@@ -72,7 +64,7 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 
 	
 	@Override
-	public String handleRequest(Object input, Context context) {
+	public String handleRequest(Map<String, String> input, Context context) {
 
 		this.context = context;
 		this.logger = new SimpleLambdaLogger(this.context);
@@ -176,6 +168,7 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 
 		ManifestCreator manifestCreator = null;
 
+		// HUOM: template voi olla vakio
 		//String template = this.readManifestTemplate();
 		if (!this.manifestArn.isEmpty() && !this.manifestBucket.isEmpty() && !this.manifestPath.isEmpty()) {
 			manifestCreator = new ManifestCreator(this.logger, this);
@@ -198,40 +191,24 @@ public class LambdaFunctionHandler implements RequestHandler<Object, String>, Si
 
 	
 	
-	/*
-	public String readManifestTemplate() {
-		String content = "";
-		if (!this.templateBucket.isEmpty() && !this.templatePath.isEmpty()) {
-			try {
-				AmazonS3 s3Client = AmazonS3Client.builder().withRegion(this.region).build();
-				content = s3Client.getObjectAsString(this.templateBucket, this.templatePath + "/" + this.outputFileName + ".json");
-			} catch (Exception e) {
-				System.err.println("Error:Fatal: could not read manifest template");
-				System.out.println("trying to read manifest template from 's3://" + this.manifestBucket + "/" + this.manifestPath + "/" + this.outputFileName + "'");
-				content = "";
-			}
-		}
-		return content;
-	}
-	*/
-	
-	
+
 	
 	
 	/**
 	 * Uusi parametrien haku nimen mukaan
 	 * 
-	 * @author Isto Saarinen 2021-12-01
+	 * @author Isto Saarinen 2021-12-16
 	 * 
-	 * @param input		input JSON
+	 * @param input		input map
 	 * @param name		haettava avain
 	 * @return arvo tai ""
 	 */
-	protected String getDate(Object input, String name) {
+	protected String getDate(Map<String,String> input, String name) {
 		if (input == null) return "";
-		JSONObject o = new JSONObject(input.toString().trim());
+//		JSONObject o = new JSONObject(input.toString().trim());
 		try {
-			String s = o.getString(name);
+//			String s = o.getString(name);
+			String s = input.get(name);
 			return s.trim();
 		} catch (Exception e) {
 		}

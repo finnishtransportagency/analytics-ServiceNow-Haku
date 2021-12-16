@@ -55,10 +55,10 @@ export class ServerlessServiceStack extends cdk.Stack {
     */
 	
 
-    // Incident lambda
+    // Incidents lambda
     datapipeServiceNowTable(
       this,						// construct
-      "incident",		// source name
+      "incidents",		// source name
       appname,			// appname == "ServiceNow"
       env,          // env == dev|test|qa|prod
       secret,	            // secret 
@@ -78,8 +78,7 @@ export class ServerlessServiceStack extends cdk.Stack {
     )
 
 
-/*
-    // services lambda
+    // Services lambda
     datapipeServiceNowTable(
       this,						// construct
       "services",		// source name
@@ -93,15 +92,15 @@ export class ServerlessServiceStack extends cdk.Stack {
       "",		// Fill in query_string_default query string used to get data from API
       "",		// Fill in query_string_date date modifier if we want exact date
       dataBucket,  // Fill in databucket
-      "servicenow2_services",		// Fill in s3 output_path
-      "servicenow2_services",		// Fill in output_filename
+      "servicenow_cmdb_ci_service",		// Fill in s3 output_path
+      "servicenow_cmdb_ci_service",		// Fill in output_filename
       dataBucket.bucketName,  //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
-      "manifest/servicenow2_services",		// Fill in manifest_path,
+      "manifest/servicenow_cmdb_ci_service",		// Fill in manifest_path,
       acl,		// ACL value for xaccount bucket write
       "true"	// coordinatetransformtoWgs84
     )
-*/
 
+    
   }
 }
 
