@@ -247,9 +247,10 @@ public class ServiceNowApiFetch {
 			int counter = 1;
 			// Loop: jokaiselle päivälle
 			while( processDate.getMillis() <= endDate.getMillis() ) {
+				this.log("Fetch data for date '" + processDate.toString("yyyy-MM-dd") + "'");
 				if (counter > 1) sb.append(",");
 				sb.append(this.fetchData(username, password, url, processDate.toString("yyyy-MM-dd")));
-				this.log("Fetch data for date '" + processDate.toString("yyyy-MM-dd") + "'");
+				
 				processDate = processDate.plusDays(1);
 				counter++;
 			}
