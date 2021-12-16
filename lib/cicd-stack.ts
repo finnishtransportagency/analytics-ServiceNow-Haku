@@ -30,8 +30,6 @@ export class CICDStack extends Stack {
   constructor(scope: Construct, id: string, props: ServiceStackProps) {
     super(scope, id, props);
     const appname = this.node.tryGetContext('appname')
-    const sourceArtifact = new codepipeline.Artifact();
-    const cloudAssemblyArtifact = new codepipeline.Artifact();
     var branch = "master"
 
     const pipeline = new CodePipeline(this, appname+'-Pipeline', {
