@@ -135,7 +135,6 @@ public class TestContext implements Context {
 
 		@Override
 		public void log(byte[] message) {
-			// TODO Auto-generated method stub
 			
 		}
     }

@@ -33,7 +33,6 @@ public class EnrichServiceNowDataWithCoordinatesTest {
     	try {
 			text = new String(Files.readAllBytes(file.toPath()));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     	System.out.println(new SimpleDateFormat("dd.MM.yyyy").format(new Date()) +"/part"+0+"/" + "u_case.json");

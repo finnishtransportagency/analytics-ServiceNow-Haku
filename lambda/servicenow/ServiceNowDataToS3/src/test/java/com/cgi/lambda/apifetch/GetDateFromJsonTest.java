@@ -13,7 +13,6 @@ public class GetDateFromJsonTest {
 
     @BeforeClass
     public static void createInput() throws IOException {
-        // TODO: set up your sample input object here.
         input = null;
     }
 
@@ -33,7 +32,7 @@ public class GetDateFromJsonTest {
 
         String output = handler.handleRequest(input, ctx);
 
-        // TODO: validate output here if needed. */
+        */
         Assert.assertEquals("", "");
     }
 }
