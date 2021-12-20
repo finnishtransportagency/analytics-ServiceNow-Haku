@@ -29,7 +29,7 @@ import org.joda.time.DateTime;
 
 
 
-public class LambdaFunctionHandler implements RequestHandler<Map<String,String>, String>, SimpleWriter {
+public class LambdaFunctionHandler implements RequestHandler<Map<String, Object>, String>, SimpleWriter {
 
 	// Vakiot joita ei tarvitse muuttaa asetetaan jo täällä. Loput handlerissa
 	
@@ -59,7 +59,7 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 
 	
 	@Override
-	public String handleRequest(Map<String, String> input, Context context) {
+	public String handleRequest(Map<String, Object> input, Context context) {
 
 		this.context = context;
 		this.logger = new SimpleLambdaLogger(this.context);
@@ -117,14 +117,28 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 		}
 		
 
-		// Päivämäärä- inputit
-		this.logger.log("Input: " + input);
-		String datein = getDate(input, "date");
-		this.logger.log("input date:  '" + datein + "'\n");
-		String startdatein = getDate(input, "startdate");
-		this.logger.log("input startdate:  '" + startdatein + "'\n");
-		String enddatein = getDate(input, "enddate");
-		this.logger.log("input enddate:  '" + enddatein + "'\n");
+
+		String datein = "";
+		String startdatein = "";
+		String enddatein = "";
+
+		if (input != null) {
+			// Päivämäärä- inputit
+			this.logger.log("Input: " + input);
+			datein = getDate(input, "date");
+			this.logger.log("input date:  '" + datein + "'\n");
+			startdatein = getDate(input, "startdate");
+			this.logger.log("input startdate:  '" + startdatein + "'\n");
+			enddatein = getDate(input, "enddate");
+			this.logger.log("input enddate:  '" + enddatein + "'\n");
+		}
+
+
+
+
+
+
+
 
 		DateTime startDate = null;
 		DateTime endDate = null;
@@ -206,12 +220,12 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String,String>,
 	 * @param name		haettava avain
 	 * @return arvo tai ""
 	 */
-	protected String getDate(Map<String,String> input, String name) {
+	protected String getDate(Map<String,Object> input, String name) {
 		if (input == null) return "";
 		try {
 			if (input.containsKey(name)) {
-				String s = input.get(name);
-				return s.trim();
+				Object s = input.get(name);
+				return (s != null) ? s.toString().trim() : "";
 			}
 			return "";
 		} catch (Exception e) {
