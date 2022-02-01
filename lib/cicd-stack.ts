@@ -5,6 +5,12 @@ import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as ssm from '@aws-cdk/aws-ssm';
 import { ServerlessServiceStack } from './serverless-service-stack';
 
+
+// Stackname = "ServiceNow-dev-ServiceNow-service-dev"
+
+
+
+
 interface stageprops extends StageProps {
   appname:string
 }

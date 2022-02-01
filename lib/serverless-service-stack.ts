@@ -23,8 +23,8 @@ export class ServerlessServiceStack extends cdk.Stack {
     // Vain env, viimeinen osa
     var env = this.stackName.split("-").slice(-1)[0]
 
-    // HUOM: riittää 1 secret/env ==>> ServiceNow-APIFetch-dev
-    var secretName = appname + "-APIFetch-" + env
+    // HUOM: riittää 1 secret/env ==>> ServiceNow-API-dev
+    var secretName = appname + "-API-" + env
     // "ServiceNowAPIdev" => ServiceNowAPIdev98FDFBFE-YECe7Myy38jY
     const secret = new secretsmanager.Secret(this, secretName,
       { //DO NOT change this object, it will create new blank secretmanager 
@@ -40,8 +40,9 @@ export class ServerlessServiceStack extends cdk.Stack {
     //remember to add username,password,url hints to secretmanager so lambda can fetch them
     
 
-    // HUOM: riittää 1 bucket/env ==>> servicenow-apifetch-dev-data
-    var dataBucketName = appname.toLowerCase() + "-apifetch-data-" + env.toLowerCase()
+
+    // HUOM: riittää 1 bucket/env ==>> servicenow-api-dev-data
+    var dataBucketName = appname.toLowerCase() + "-api-data-" + env.toLowerCase()
     // alkuperäinen: 'data' + this.stackName
     // "data" => servicenow-dev-servicenow-service-de-data7e2128ca-v9oj09v2vhpu
     const dataBucket = new s3.Bucket(this, dataBucketName, {
@@ -50,15 +51,13 @@ export class ServerlessServiceStack extends cdk.Stack {
     });
 
     var acl = this.node.tryGetContext('ADE'+env+'ACL')
-    /*
-    Replicate this for more lambda+bucket+crontrigger tasks sets and set secrets to secrets manager
-    */
-	
 
-    // Incidents lambda
+
+	
+    // Lambda u_case
     datapipeServiceNowTable(
       this,						// construct
-      "incidents",		// source name
+      "u_case",		// source name
       appname,			// appname == "ServiceNow"
       env,          // env == dev|test|qa|prod
       secret,	            // secret 
@@ -66,25 +65,48 @@ export class ServerlessServiceStack extends cdk.Stack {
       lambdaRole,				  // role that allows cross region bucket put
       "com.cgi.lambda.apifetch.LambdaFunctionHandler", //handler used in code
       "mvn clean install && cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/", //buildcommand
-      "task?sysparm_query=sys_class_name%3Dsn_customerservice_casesys_updated_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()%5EORsys_created_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()&sysparm_display_value=true",		// Fill in query_string_default query string used to get data from API
-      "task?sysparm_query=sys_class_name%3Dsn_customerservice_case%5Esys_created_onON{DATEFILTER}@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27start%27)@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27end%27)&sysparm_display_value=true",		// Fill in query_string_date date modifier if we want exact date
+      "u_case?sysparm_query=sys_updated_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()%5EORsys_created_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()&sysparm_display_value=true",		// Fill in query_string_default query string used to get data from API
+      "u_case?sysparm_query=sys_created_onON{DATEFILTER}@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27start%27)@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27end%27)&sysparm_display_value=true",		// Fill in query_string_date date modifier if we want exact date
       dataBucket,  // Fill in databucket
-      "servicenow2_u_case",		// Fill in s3 output_path
-      "servicenow2_u_case",		// Fill in output_filename
+      "u_case",		// Fill in s3 output_path
+      "servicenow_u_case",		// Fill in output_filename
       dataBucket.bucketName,  //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
-      "manifest/servicenow2_u_case",		// Fill in manifest_path,
+      "manifest/servicenow_u_case",		// Fill in manifest_path,
       acl,		// ACL value for xaccount bucket write
       "true"	// coordinatetransformtoWgs84
     )
 
 
+    // Lambda sn_customerservice_case
+    datapipeServiceNowTable(
+      this,						// construct
+      "sn_customerservice_case",		// source name
+      appname,			// appname == "ServiceNow"
+      env,          // env == dev|test|qa|prod
+      secret,	            // secret 
+      this.region,				// region that is beign used
+      lambdaRole,				  // role that allows cross region bucket put
+      "com.cgi.lambda.apifetch.LambdaFunctionHandler", //handler used in code
+      "mvn clean install && cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/", //buildcommand
+      "sn_customerservice_case?sysparm_query=sys_updated_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()%5EORsys_created_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()&sysparm_display_value=true",		// Fill in query_string_default query string used to get data from API
+      "sn_customerservice_case?sysparm_query=Esys_created_onON{DATEFILTER}@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27start%27)@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27end%27)&sysparm_display_value=true",		// Fill in query_string_date date modifier if we want exact date
+      dataBucket,  // Fill in databucket
+      "sn_customerservice_case",		// Fill in s3 output_path
+      "servicenow_sn_customerservice_case",		// Fill in output_filename
+      dataBucket.bucketName,  //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
+      "manifest/servicenow_sn_customerservice_case",		// Fill in manifest_path,
+      acl,		// ACL value for xaccount bucket write
+      "true"	// coordinatetransformtoWgs84
+    )
+
+    
 
 
 
     // Services lambda
     datapipeServiceNowTable(
       this,						// construct
-      "services",		// source name
+      "cmdb_ci_service",		// source name
       appname,			// appname == "ServiceNow"
       env,          // env == dev|test|qa|prod
       secret,	            // secret 
@@ -135,7 +157,7 @@ function datapipeServiceNowTable(
 */
 
   // ServiceNow-ApiFetch-dev-incident
-  var functionName = appname + "-ApiFetch-" + env + "-" + sourcename
+  var functionName = appname + "-Api-" + env + "-" + sourcename
 
   // "incident" => ServiceNow-dev-ServiceNow-service-incident9FEF7035-rwPSYYliuOvt
   const lambdaFunc = new lambda.Function(construct, sourcename, {
@@ -182,7 +204,7 @@ function datapipeServiceNowTable(
 
   var ruleName = "dailyRun-" + functionName
   const rule = new Rule(construct, ruleName, {
-    schedule: Schedule.expression("cron(15 3 * * ? *)"),
+    schedule: Schedule.expression("cron(0 1 * * ? *)"),
       targets: [new LambdaFunction(lambdaFunc)],
       ruleName: ruleName
   });
@@ -193,7 +215,8 @@ function datapipeServiceNowTable(
 
 
 }
-//stepfunction (optional, nice to have to loop through dates)
+
+
 
 
 
