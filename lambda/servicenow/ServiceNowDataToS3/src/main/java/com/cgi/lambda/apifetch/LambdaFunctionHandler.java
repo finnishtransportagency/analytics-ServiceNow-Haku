@@ -63,8 +63,8 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String, Object>
 	public String handleRequest(Map<String, Object> input, Context context) {
 
 		this.runYearMonth = DateTime.now().toString("YYYY-MM");
-		String includeYM = System.getenv("include_yearmonth");
-		if ("0".equals(includeYM) || "false".equalsIgnoreCase(includeYM)) {
+		String t = System.getenv("add_path_ym");
+		if ("0".equals(t) || "false".equalsIgnoreCase(t)) {
 			this.includeYearMonth = false;
 		}
 		
