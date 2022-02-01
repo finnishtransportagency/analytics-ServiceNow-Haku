@@ -35,8 +35,8 @@ public class ManifestCreator {
 	
 	public boolean createManifest(FileSpec dataFile) {
 		String manifestData = this.createManifestContent(this.template, dataFile);
-		this.log("manifest data = '" + manifestData + "'");
 		FileSpec manifestFile = this.writer.makeManifestFileName(dataFile);
+		this.log("create manifest = '" + manifestData + "' => '" + manifestFile + "'");
 		this.writer.writeManifestFile(manifestFile, manifestData);
 		return true;
 	}
