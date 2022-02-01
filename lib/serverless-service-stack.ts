@@ -73,8 +73,9 @@ export class ServerlessServiceStack extends cdk.Stack {
       dataBucket.bucketName,  //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
       "manifest/servicenow_u_case",  // Fill in manifest_path,
       acl,                // ACL value for xaccount bucket write
-      "true"              // coordinatetransformtoWgs84
-    )
+      "true",             // coordinatetransformtoWgs84
+      "05 4 * * ? *"       // Cron schedule
+      )
 
 
     // Lambda sn_customerservice_case
@@ -96,7 +97,8 @@ export class ServerlessServiceStack extends cdk.Stack {
       dataBucket.bucketName,       //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
       "manifest/servicenow_sn_customerservice_case",    // Fill in manifest_path,
       acl,                // ACL value for xaccount bucket write
-      "true"              // coordinatetransformtoWgs84
+      "true",             // coordinatetransformtoWgs84
+      "10 4 * * ? *"      // Cron schedule
     )
 
     
@@ -122,7 +124,8 @@ export class ServerlessServiceStack extends cdk.Stack {
       dataBucket.bucketName,  //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
       "manifest/servicenow_cmdb_ci_service",		// Fill in manifest_path,
       acl,                // ACL value for xaccount bucket write
-      "true"              // coordinatetransformtoWgs84
+      "true",             // coordinatetransformtoWgs84
+      "15 4 * * ? *"      // Cron schedule
     )
 
     
@@ -147,14 +150,9 @@ function datapipeServiceNowTable(
   manifest_bucket: string,
   manifest_path: string,
   manifest_acl: string,
-  ctransform: string) {
+  ctransform: string,
+  cron_expr: string) {
 
-/*
-  const resourcenaming = "-" + APIName + "-" + appnameAndEnv
-  const databucket = new s3.Bucket(construct, 'DataBucket' + resourcenaming, {
-    removalPolicy: cdk.RemovalPolicy.DESTROY,
-  });
-*/
 
   // ServiceNow-ApiFetch-dev-incident
   var functionName = appname + "-Api-" + env + "-" + sourcename
@@ -205,7 +203,7 @@ function datapipeServiceNowTable(
 
   var ruleName = "dailyRun-" + functionName
   const rule = new Rule(construct, ruleName, {
-    schedule: Schedule.expression("cron(0 1 * * ? *)"),
+    schedule: Schedule.expression("cron(" + cron_expr + ")"),
       targets: [new LambdaFunction(lambdaFunc)],
       ruleName: ruleName
   });
