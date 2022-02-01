@@ -55,12 +55,19 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String, Object>
 
 	private String fullscans = "";
 	
-	
+	private String runYearMonth = "";
+	private boolean includeYearMonth = true;
 
 	
 	@Override
 	public String handleRequest(Map<String, Object> input, Context context) {
 
+		this.runYearMonth = DateTime.now().toString("YYYY-MM");
+		String includeYM = System.getenv("include_yearmonth");
+		if ("0".equals(includeYM) || "false".equalsIgnoreCase(includeYM)) {
+			this.includeYearMonth = false;
+		}
+		
 		this.context = context;
 		this.logger = new SimpleLambdaLogger(this.context);
 
@@ -115,7 +122,7 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String, Object>
 			this.logger.log("Secret retrieve error: '" + e.toString() + "', '" + e.getMessage() + "'");
 			return "";
 		}
-		
+
 
 
 		String datein = "";
@@ -266,12 +273,15 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String, Object>
 	 * @return tiedosto ja polku
 	 */
 	// String destinationfilename = "table." + sourceFilename + "." + c.getTime().getTime() + ".batch." + c.getTime().getTime() + ".fullscanned." + this.fullscanned + ".json";
-	// s3://<outputBucket>/<outputPath>/table.<outputFileName>.<now>.batch.<now>.fullscanned.false.json
+	// s3://<outputBucket>/<outputPath>/[YYYY-MM/]table.<outputFileName>.<now>.batch.<now>.fullscanned.false.json
 	@Override
 	public FileSpec makeDataFileName(String sourceName) {
 		FileSpec retval = new FileSpec();
 		retval.bucket = this.outputBucket;
 		retval.path = this.outputPath;
+		if (this.includeYearMonth) {
+			retval.path = this.outputPath + this.runYearMonth + "/";
+		}
 		retval.timestamp = "" + DateTime.now().getMillis();
 		retval.sourceName =  sourceName;
 		retval.fullscanned = this.isFullscan(sourceName);
