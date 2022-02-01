@@ -94,7 +94,10 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String, Object>
 
 		// Koordinaattimuunnos
 		String inCoordinateTransform = System.getenv("coordinate_transform");
-		boolean coordinateTransform = inCoordinateTransform.trim().equalsIgnoreCase("true") ? true : false; 
+		boolean coordinateTransform = false;
+		if ("1".equals(inCoordinateTransform.trim()) || "true".equalsIgnoreCase(inCoordinateTransform.trim())) {
+			coordinateTransform = true;
+		}
 
 		this.fullscans = System.getenv("fullscans");
 		

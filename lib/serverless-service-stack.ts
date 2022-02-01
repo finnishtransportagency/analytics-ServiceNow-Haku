@@ -193,7 +193,7 @@ function datapipeServiceNowTable(
       "manifest_arn": manifest_acl,
       "coordinate_transform": ctransform,
       "fullscans":"",
-      "add_path_ym": "1"
+      "add_path_ym": "true"
     },
     role: lambdaRole
   });
