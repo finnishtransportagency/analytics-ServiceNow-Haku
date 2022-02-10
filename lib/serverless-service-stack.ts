@@ -11,17 +11,19 @@ import * as secretsmanager from '@aws-cdk/aws-secretsmanager';
 export class ServerlessServiceStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: StackProps) {
     super(scope, id, props);
-    const lambdaRole = iam.Role.fromRoleArn(
-      this,
-      'imported-role',
-      `arn:aws:iam::${cdk.Stack.of(this).account}:role/servicenowlambda`,
-      { mutable: true },
-    );
 
     // Vain nimi, ensimmäinen osa
     var appname = this.stackName.split("-").slice(0)[0]
     // Vain env, viimeinen osa
     var env = this.stackName.split("-").slice(-1)[0]
+
+
+    const lambdaRole = iam.Role.fromRoleArn(
+      this,
+      'imported-role-' + env,
+      `arn:aws:iam::${cdk.Stack.of(this).account}:role/servicenowlambda-` + env,
+      { mutable: true },
+    );
 
     // HUOM: riittää 1 secret/env ==>> ServiceNow-API-dev
     var secretName = appname + "-API-" + env
