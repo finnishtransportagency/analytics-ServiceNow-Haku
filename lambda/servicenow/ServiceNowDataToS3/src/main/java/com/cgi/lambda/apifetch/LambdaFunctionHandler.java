@@ -390,7 +390,6 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String, Object>
 			//String errorMessage = "Error: Failure to encode file to load in: " + outputFile.bucket + "/" + outputFile.path + "/" + outputFile.fileName;
 			String errorMessage = "Error: encoding '" + e.toString() + "', '" + e.getMessage() + "', file name = '" + fullPath + "'";
 			this.logger.log(errorMessage);
-
 			System.err.println(errorMessage);
 			e.printStackTrace();
 		} catch (Exception e) {

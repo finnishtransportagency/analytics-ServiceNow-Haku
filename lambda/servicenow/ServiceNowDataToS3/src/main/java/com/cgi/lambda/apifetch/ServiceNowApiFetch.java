@@ -154,17 +154,6 @@ public class ServiceNowApiFetch {
 					this.logger.log("Error: Empty dataset after coordinate transform");
 					// Koordinaattimuunnosvirhe, poistutaan
 					return false;
-				/*
-				} else if (enrichmentCenter.enrichedList.size() == 1) {
-					this.logger.log("Write transformed output start");
-					FileSpec outputFile = writer.makeDataFileName(this.sourceName);
-					if(writer.writeDataFile(outputFile, dataAndCoordinates)) {
-						if (this.manifestCreator != null) {
-							this.manifestCreator.createManifest(outputFile);
-						}
-					}
-					this.logger.log("Write transformed output end");
-				*/
 				} else { // loop through result array
 					this.logger.log("Write transformed output start");
 					int size = enrichmentCenter.enrichedList.size();
