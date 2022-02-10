@@ -424,7 +424,7 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String, Object>
 		retval.timestamp = dataFile.timestamp;
 		retval.sourceName =  dataFile.sourceName;
 		retval.fullscanned = dataFile.fullscanned;
-		retval.fileName = "manifest-table." + retval.sourceName + "." + retval.timestamp + ".batch." + retval.timestamp + ".fullscanned." + retval.fullscanned + ".json";
+		retval.fileName = "manifest-table." + retval.sourceName + "." + retval.timestamp + ".batch." + retval.timestamp + ".fullscanned." + retval.fullscanned + ".json.json";
 		return retval; 
 	}
 
