@@ -265,7 +265,11 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String, Object>
 	}
 	
 
+
 	
+
+
+
 	/**
 	 * Kirjoitettavan tiedoston nimen muodostus
 	 * 
@@ -278,12 +282,16 @@ public class LambdaFunctionHandler implements RequestHandler<Map<String, Object>
 	// String destinationfilename = "table." + sourceFilename + "." + c.getTime().getTime() + ".batch." + c.getTime().getTime() + ".fullscanned." + this.fullscanned + ".json";
 	// s3://<outputBucket>/<outputPath>/[YYYY-MM/]table.<outputFileName>.<now>.batch.<now>.fullscanned.false.json
 	@Override
-	public FileSpec makeDataFileName(String sourceName) {
+	public FileSpec makeDataFileName(String sourceName, String dataYearMonth) {
 		FileSpec retval = new FileSpec();
 		retval.bucket = this.outputBucket;
 		retval.path = this.outputPath;
 		if (this.includeYearMonth) {
-			retval.path = this.outputPath + this.runYearMonth + "/";
+			if (dataYearMonth != null) {
+				retval.path = this.outputPath + dataYearMonth + "/";
+			} else {
+				retval.path = this.outputPath + this.runYearMonth + "/";
+			}
 		}
 		retval.timestamp = "" + DateTime.now().getMillis();
 		retval.sourceName =  sourceName;

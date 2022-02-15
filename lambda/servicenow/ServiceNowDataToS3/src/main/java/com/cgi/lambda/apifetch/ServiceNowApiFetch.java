@@ -107,14 +107,20 @@ public class ServiceNowApiFetch {
 
 		String data = null;
 		
+		String dataYearMonth = "";
+
 		try {
 			// Eri kutsu jos haetaan vakio eilinen tai päivämäärällä (tai välillä) 
 			if ((startDate != null) && (endDate != null)) {
 				this.logger.log("Fetch data created between '" + startDate.toString("yyyy-MM-dd") + "' - '" + endDate.toString("yyyy-MM-dd") + "'");
 				data = this.fetchData(startDate, endDate);
+				// Tallennetaan koko data alkupäivälle koska päiviä ei pureta tuloksen sisältä
+				dataYearMonth = startDate.toString("YYYY-MM");
 			} else {
 				this.logger.log("Fetch data created or updated yesterday");
 				data = this.fetchData();
+				// Normaali datan päivä = eilinen
+				dataYearMonth = DateTime.now().minusDays(1).toString("YYYY-MM");
 			}
 				
 		} catch (Exception e) {
@@ -158,7 +164,7 @@ public class ServiceNowApiFetch {
 					this.logger.log("Write transformed output start");
 					int size = enrichmentCenter.enrichedList.size();
 					for (int i = 0; i < size; i++) {
-						FileSpec outputFile = writer.makeDataFileName(this.sourceName);
+						FileSpec outputFile = writer.makeDataFileName(this.sourceName, dataYearMonth);
 						if (writer.writeDataFile(outputFile, enrichmentCenter.enrichedList.get(i).toString())) {
 							if (this.manifestCreator != null) {
 								boolean result = this.manifestCreator.createManifest(outputFile);
@@ -171,7 +177,7 @@ public class ServiceNowApiFetch {
 
 			} else {
 				this.logger.log("Write output start");
-				FileSpec outputFile = writer.makeDataFileName(this.sourceName);
+				FileSpec outputFile = writer.makeDataFileName(this.sourceName, dataYearMonth);
 				if (writer.writeDataFile(outputFile, data)) {
 					if (this.manifestCreator != null) {
 						boolean result = this.manifestCreator.createManifest(outputFile);
