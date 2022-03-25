@@ -114,9 +114,9 @@ public class TestServiceNowApiFetch implements SimpleLogger, SimpleWriter {
 
 
 
-	
+
 	@Override
-	public FileSpec makeDataFileName(String sourceName) {
+	public FileSpec makeDataFileName(String sourceName, String dataYearMonth) {
 		FileSpec retval = new FileSpec();
 		retval.bucket = this.outputBucket;
 		retval.path = this.outputPath;
