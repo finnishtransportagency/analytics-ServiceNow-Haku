@@ -137,54 +137,73 @@ public class ServiceNowApiFetch {
 
 		if (!data.isEmpty()) {
 
-			if (coordinateTransform) {
-				EnrichServiceNowDataWithCoordinates enrichmentCenter = null;
-				
-				try {
-					// 3067 =ETRS89 / ETRS-TM35FIN, converts to 4326=wgs84
-					enrichmentCenter = new EnrichServiceNowDataWithCoordinates(data, "EPSG:3067", this.outputSplitLimit);
-					enrichmentCenter.enrichData();
-				} catch (Exception e) {
-					this.logger.log("Error: Coordinate transform failed: '" + e.toString() + "', '" + e.getMessage() + "'");
-					StringWriter sw = new StringWriter();
-					PrintWriter pw = new PrintWriter(sw);
-					e.printStackTrace(pw);
-					String sStackTrace = sw.toString(); // stack trace as a string
-					this.logger.log("Error: Coordinate transform failed: " + sStackTrace);
-					// Koordinaattimuunnosvirhe, poistutaan
-					return false;
-				}
+			data = "{\"result\":[" + data + "]}";
+			int recordSize = 0;
+			try {
+				JSONObject records = new JSONObject(data);
+				JSONArray jsonArray = records.getJSONArray("result");
+				recordSize = jsonArray.length();
+			} catch (Exception e) {
+				recordSize = 0;
+				this.logger.log(this.alertString + " Failed to parse fetched json: '" + e.toString() + "', '" + e.getMessage() + "'");
+				return false;
+			}
+			
+			this.logger.log("Fetched total records = " + recordSize);
 
-				// adds wgs84 coordinates
-				if ((enrichmentCenter == null) || enrichmentCenter.enrichedList.isEmpty()) {
-					this.logger.log("Error: Empty dataset after coordinate transform");
-					// Koordinaattimuunnosvirhe, poistutaan
-					return false;
-				} else { // loop through result array
-					this.logger.log("Write transformed output start");
-					int size = enrichmentCenter.enrichedList.size();
-					for (int i = 0; i < size; i++) {
-						FileSpec outputFile = writer.makeDataFileName(this.sourceName, dataYearMonth);
-						if (writer.writeDataFile(outputFile, enrichmentCenter.enrichedList.get(i).toString())) {
-							if (this.manifestCreator != null) {
-								boolean result = this.manifestCreator.createManifest(outputFile);
-								if (!result) return false;
+			if (recordSize > 0) {
+
+				if (coordinateTransform) {
+					EnrichServiceNowDataWithCoordinates enrichmentCenter = null;
+					
+					try {
+						// 3067 =ETRS89 / ETRS-TM35FIN, converts to 4326=wgs84
+						enrichmentCenter = new EnrichServiceNowDataWithCoordinates(data, "EPSG:3067", this.outputSplitLimit);
+						enrichmentCenter.enrichData();
+					} catch (Exception e) {
+						this.logger.log("Error: Coordinate transform failed: '" + e.toString() + "', '" + e.getMessage() + "'");
+						StringWriter sw = new StringWriter();
+						PrintWriter pw = new PrintWriter(sw);
+						e.printStackTrace(pw);
+						String sStackTrace = sw.toString(); // stack trace as a string
+						this.logger.log("Error: Coordinate transform failed: " + sStackTrace);
+						// Koordinaattimuunnosvirhe, poistutaan
+						return false;
+					}
+
+					// adds wgs84 coordinates
+					if ((enrichmentCenter == null) || enrichmentCenter.enrichedList.isEmpty()) {
+						this.logger.log("Error: Empty dataset after coordinate transform");
+						// Koordinaattimuunnosvirhe, poistutaan
+						return false;
+					} else { // loop through result array
+						this.logger.log("Write transformed output start");
+						int size = enrichmentCenter.enrichedList.size();
+						for (int i = 0; i < size; i++) {
+							FileSpec outputFile = writer.makeDataFileName(this.sourceName, dataYearMonth);
+							if (writer.writeDataFile(outputFile, enrichmentCenter.enrichedList.get(i).toString())) {
+								if (this.manifestCreator != null) {
+									boolean result = this.manifestCreator.createManifest(outputFile);
+									if (!result) return false;
+								}
 							}
 						}
+						this.logger.log("Write transformed output end. Processed parts = " + size);
 					}
-					this.logger.log("Write transformed output end. Processed parts = " + size);
-				}
 
-			} else {
-				this.logger.log("Write output start");
-				FileSpec outputFile = writer.makeDataFileName(this.sourceName, dataYearMonth);
-				if (writer.writeDataFile(outputFile, data)) {
-					if (this.manifestCreator != null) {
-						boolean result = this.manifestCreator.createManifest(outputFile);
-						if (!result) return false;
+				} else {
+					this.logger.log("Write output start");
+					FileSpec outputFile = writer.makeDataFileName(this.sourceName, dataYearMonth);
+					if (writer.writeDataFile(outputFile, data)) {
+						if (this.manifestCreator != null) {
+							boolean result = this.manifestCreator.createManifest(outputFile);
+							if (!result) return false;
+						}
 					}
+					this.logger.log("Write output end");
 				}
-				this.logger.log("Write output end");
+			} else {
+				this.logger.log("No records to write");
 			}
 			
 		}
@@ -220,7 +239,8 @@ public class ServiceNowApiFetch {
 				counter++;
 			}
 			// Lisätään listan ympärille result objekti
-			return "{\"result\":[" + sb.toString() + "]}";
+			//return "{\"result\":[" + sb.toString() + "]}";
+			return sb.toString();
 		} catch (Exception e) {
 			this.log("Fetch data for date range '" + (startDate != null ? startDate.toString("yyyy-MM-dd") : "null") + "' -> '" + (endDate != null ? endDate.toString("yyyy-MM-dd") : "null") + " failed: '" + e.toString() + "', '" + e.getMessage() + "'");
 		}
@@ -239,7 +259,8 @@ public class ServiceNowApiFetch {
 	 * @return JSON data
 	 */
 	public String fetchData() {
-		return"{\"result\":[" + this.fetchData(null) + "]}"; 
+		//return"{\"result\":[" + this.fetchData(null) + "]}"; 
+		return this.fetchData(null); 
 	}
 	
 	
