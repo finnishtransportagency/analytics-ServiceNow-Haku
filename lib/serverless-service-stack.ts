@@ -68,7 +68,8 @@ export class ServerlessServiceStack extends cdk.Stack {
       "com.cgi.lambda.apifetch.LambdaFunctionHandler",    //handler used in code
       "mvn clean install && cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/",    //buildcommand
       "u_case?sysparm_query=sys_updated_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()%5EORsys_created_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()&sysparm_display_value=true",    // Fill in query_string_default query string used to get data from API
-      "u_case?sysparm_query=sys_created_onON{DATEFILTER}@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27start%27)@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27end%27)&sysparm_display_value=true",    // Fill in query_string_date date modifier if we want exact date
+      //"u_case?sysparm_query=sys_created_onON{DATEFILTER}@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27start%27)@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27end%27)&sysparm_display_value=true",    // Fill in query_string_date date modifier if we want exact date
+      "u_case?sysparm_query=sys_updated_onBETWEENjavascript%3Ags.daysAgoStart(3)%40javascript%3Ags.endOfYesterday()%5EORsys_created_onBETWEENjavascript%3Ags.daysAgoStart(3)%40javascript%3Ags.endOfYesterday()&sysparm_display_value=true",    // Fill in query_string_date date modifier if we want exact date
       dataBucket,         // Fill in databucket
       "u_case",           // Fill in s3 output_path
       "servicenow_u_case",    // Fill in output_filename
@@ -92,7 +93,8 @@ export class ServerlessServiceStack extends cdk.Stack {
       "com.cgi.lambda.apifetch.LambdaFunctionHandler",    //handler used in code
       "mvn clean install && cp ./target/servicenow-to-s3-lambda-1.0.0.jar /asset-output/",    //buildcommand
       "sn_customerservice_case?sysparm_query=sys_updated_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()%5EORsys_created_onONYesterday%40javascript%3Ags.beginningOfYesterday()%40javascript%3Ags.endOfYesterday()&sysparm_display_value=true",    // Fill in query_string_default query string used to get data from API
-      "sn_customerservice_case?sysparm_query=sys_created_onON{DATEFILTER}@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27start%27)@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27end%27)&sysparm_display_value=true",    // Fill in query_string_date date modifier if we want exact date
+      //"sn_customerservice_case?sysparm_query=sys_created_onON{DATEFILTER}@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27start%27)@javascript:gs.dateGenerate(%27{DATEFILTER}%27,%27end%27)&sysparm_display_value=true",    // Fill in query_string_date date modifier if we want exact date
+      "sn_customerservice_case?sysparm_query=sys_updated_onBETWEENjavascript%3Ags.daysAgoStart(3)%40javascript%3Ags.endOfYesterday()%5EORsys_created_onBETWEENjavascript%3Ags.daysAgoStart(3)%40javascript%3Ags.endOfYesterday()&sysparm_display_value=true",    // Fill in query_string_date date modifier if we want exact date
       dataBucket,         // Fill in databucket
       "sn_customerservice_case",   // Fill in s3 output_path
       "servicenow_sn_customerservice_case",    // Fill in output_filename
@@ -203,16 +205,18 @@ function datapipeServiceNowTable(
   secret.grantRead(lambdaFunc)
   output_bucket.grantPut(lambdaFunc)
 
-  var ruleName = "dailyRun-" + functionName
-  const rule = new Rule(construct, ruleName, {
-    schedule: Schedule.expression("cron(" + cron_expr + ")"),
-      targets: [new LambdaFunction(lambdaFunc)],
-      ruleName: ruleName
-  });
+  if (env != 'dev') {
+    var ruleName = "dailyRun-" + functionName
+    const rule = new Rule(construct, ruleName, {
+      schedule: Schedule.expression("cron(" + cron_expr + ")"),
+        targets: [new LambdaFunction(lambdaFunc)],
+        ruleName: ruleName
+    });
+    cdk.Tags.of(rule).add("APIFetch", sourcename)
+  }
 
   //cdk.Tags.of(output_bucket).add("APIFetch", sourcename)
   cdk.Tags.of(lambdaFunc).add("APIFetch", sourcename)
-  cdk.Tags.of(rule).add("APIFetch", sourcename)
 
 
 }
