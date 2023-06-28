@@ -294,8 +294,8 @@ public class ServiceNowApiFetch {
 			StringBuffer sb = new StringBuffer();
 
 			// Yritetään aina ensin ilman rajoituksia
-			Integer offset = null;
-			Integer limit = null;
+			Integer offset = Integer.valueOf(0);
+			Integer limit = this.increment;
 
 			//String urlQuery = this.url + query;
 			
@@ -313,7 +313,8 @@ public class ServiceNowApiFetch {
 
 				if (!piece.status) {
 					// Tämä on aina ensimmäinen kutsu jos tänne päädytään, status saadaan vain jos offset+limit ei annettu. Jatketaan offset+limit niin saadaan kaikki
-					limit = piece.recordCount;
+					//limit = piece.recordCount;
+					limit = piece.recordCount < this.increment ? piece.recordCount : this.increment;
 					if (offset == null) offset = 0;
 					offset += piece.recordCount;
 					this.log("## fetch error. continue with offset = " + offset + ", limit = " + limit);
@@ -443,35 +444,56 @@ public class ServiceNowApiFetch {
 		}
 		
 		// Palautettujen tulosten "rivimäärä"
-		JSONObject records = new JSONObject(data);
-		JSONArray results = records.getJSONArray("result");
-		int size = results.length();
-		this.log("## api call return records = " + size);
+		//JSONObject records = new JSONObject(data);
+		//JSONArray results = records.getJSONArray("result");
+		//int size = results.length();
+		//this.log("## api call return records = " + size);
+
+		JSONObject records = null;
+		JSONArray results = null;
+		int size = 0;
+
+		try {
+			records = new JSONObject(data);
+			results = records.getJSONArray("result");
+			size = results.length();
+			this.log("## api call return records = " + size);
+		} catch (Exception e) {
+			// json parse kaatuu
+			this.log("## api call '" + url + "' json parse exception: '" + e.toString() + "', '" + e.getMessage() + "'");
+		}
+
+
 
 		DataHolder dh = new DataHolder();
-		dh.recordCount = results.length();
-		dh.status = true;
-		try {
-			String status = records.getString("status");
-			if ((status != null) && (status.equals("failure"))) {
-				dh.status = false;
+		if (results != null) {
+			dh.recordCount = results.length();
+			dh.status = true;
+			try {
+				String status = records.getString("status");
+				if ((status != null) && (status.equals("failure"))) {
+					dh.status = false;
+				}
+			} catch (Exception e) {
+				// "status" ei löydy => kaikki ok ja jatketaan
 			}
-		} catch (Exception e) {
-			// "status" ei löydy => kaikki ok ja jatketaan
+			
+			// Tallennetaan palautettava JSON array- objektista, siivoaa ylimääräiset suoraan pois mutta jättää [] poistettavaksi ympäriltä
+			String t = results.toString(); // HUOM: tämä palauttaa [{..},{..},...] => pitää poistaa [] ympäriltä
+			if (t.length() > 0) {
+				// Varmistus, poistetaan vain jos [] ympärillä
+				if (t.startsWith("[")) {
+					t = t.substring(1);
+				}
+				if (t.endsWith("]")) {
+					t = t.substring(0, t.length()-1);
+				}
+			}
+			dh.data = t;
+		} else {
+			dh.recordCount = 0;
+			dh.status = false;
 		}
-		
-		// Tallennetaan palautettava JSON array- objektista, siivoaa ylimääräiset suoraan pois mutta jättää [] poistettavaksi ympäriltä
-		String t = results.toString(); // HUOM: tämä palauttaa [{..},{..},...] => pitää poistaa [] ympäriltä
-		if (t.length() > 0) {
-			// Varmistus, poistetaan vain jos [] ympärillä
-			if (t.startsWith("[")) {
-				t = t.substring(1);
-			}
-			if (t.endsWith("]")) {
-				t = t.substring(0, t.length()-1);
-			}
-		}
-		dh.data = t;
 		long endts = System.currentTimeMillis();
 		this.log("## api call '" + url + "' return status = " + dh.status + ", records = " + dh.recordCount + ", time = " + (endts - startts) + " ms");
 		return dh;

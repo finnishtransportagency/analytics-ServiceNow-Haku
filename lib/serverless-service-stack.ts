@@ -186,7 +186,7 @@ function datapipeServiceNowTable(
       "query_string_default": query_string_default,
       "query_string_date": query_string_date,
       "output_split_limit": "1500",
-      "api_limit": "1000",
+      "api_limit": "600",
       "output_bucket": output_bucket.bucketName,
       "output_path": output_path,
       "output_filename": output_filename,

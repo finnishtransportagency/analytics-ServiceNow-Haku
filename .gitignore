@@ -23,6 +23,7 @@ coverage/
 *.sw[a-z]
 *~
 .idea
+.settings
 junit.xml
 *target*
 *.iml
