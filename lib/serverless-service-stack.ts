@@ -73,11 +73,11 @@ export class ServerlessServiceStack extends cdk.Stack {
       dataBucket,         // Fill in databucket
       "u_case",           // Fill in s3 output_path
       "servicenow_u_case",    // Fill in output_filename
-      dataBucket.bucketName,  //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
+      "file-load-ade-runtime-" + env,  //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
       "manifest/servicenow_u_case",  // Fill in manifest_path,
       acl,                // ACL value for xaccount bucket write
       "true",             // coordinatetransformtoWgs84
-      "05 4 * * ? *"       // Cron schedule
+      "05 2 * * ? *"       // Cron schedule
       )
 
 
@@ -98,11 +98,11 @@ export class ServerlessServiceStack extends cdk.Stack {
       dataBucket,         // Fill in databucket
       "sn_customerservice_case",   // Fill in s3 output_path
       "servicenow_sn_customerservice_case",    // Fill in output_filename
-      dataBucket.bucketName,       //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
+      "file-load-ade-runtime-" + env,       //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
       "manifest/servicenow_sn_customerservice_case",    // Fill in manifest_path,
       acl,                // ACL value for xaccount bucket write
       "true",             // coordinatetransformtoWgs84
-      "10 4 * * ? *"      // Cron schedule
+      "10 2 * * ? *"      // Cron schedule
     )
 
     
@@ -125,11 +125,11 @@ export class ServerlessServiceStack extends cdk.Stack {
       dataBucket,         // Fill in databucket
       "cmdb_ci_service",  // Fill in s3 output_path
       "servicenow_cmdb_ci_service",    // Fill in output_filename
-      dataBucket.bucketName,  //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
+      "file-load-ade-runtime-" + env,  //"file-load-ade-runtime-" + env,		// Fill in manifestbucket_name
       "manifest/servicenow_cmdb_ci_service",		// Fill in manifest_path,
       acl,                // ACL value for xaccount bucket write
       "true",             // coordinatetransformtoWgs84
-      "15 4 * * ? *"      // Cron schedule
+      "15 2 * * ? *"      // Cron schedule
     )
 
     
